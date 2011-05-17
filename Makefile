@@ -4,11 +4,12 @@ CXXFLAGS += -O3 -g -fPIC -Wall -pedantic -ansi
 
 all: $(TARGETS)
 
-SNES_REVERB_OBJ = snes_reverb.o freeverb.o inireader_dummy.o
-SNES_WAH_OBJ = snes_wah.o inireader_dummy.o wahwah.o
-SNES_PHASER_OBJ = snes_phaser.o inireader_dummy.o phaser.o
-SNES_IIR_OBJ = snes_iir.o inireader_dummy.o iirfilters.o
-SNES_ECHO_OBJ = snes_echo.o inireader_dummy.o echo.o
+INIREAD_OBJ = inireader.o config_file.o
+SNES_REVERB_OBJ = snes_reverb.o freeverb.o $(INIREAD_OBJ)
+SNES_WAH_OBJ = snes_wah.o wahwah.o $(INIREAD_OBJ)
+SNES_PHASER_OBJ = snes_phaser.o phaser.o $(INIREAD_OBJ)
+SNES_IIR_OBJ = snes_iir.o iirfilters.o $(INIREAD_OBJ)
+SNES_ECHO_OBJ = snes_echo.o echo.o $(INIREAD_OBJ)
 
 snes_reverb.so: $(SNES_REVERB_OBJ)
 	$(CXX) -o $@ $(SNES_REVERB_OBJ) -shared -Wl,--no-undefined

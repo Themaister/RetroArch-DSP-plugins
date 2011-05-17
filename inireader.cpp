@@ -1,43 +1,50 @@
-#include "IniReader.h"
-#include <iostream>
-#include <Windows.h>
+#include "inireader.h"
+#include <string>
 
-CIniReader::CIniReader(char* szFileName)
+CIniReader::CIniReader(const char* szFileName)
 {
- memset(m_szFileName, 0x00, 255);
- memcpy(m_szFileName, szFileName, strlen(szFileName));
+   conf = config_file_new(szFileName);
 }
-int CIniReader::ReadInteger(char* szSection, char* szKey, int iDefaultValue)
+
+CIniReader::~CIniReader()
 {
- int iResult = GetPrivateProfileInt(szSection,  szKey, iDefaultValue, m_szFileName); 
- return iResult;
+   if (conf)
+      config_file_free(conf);
 }
-float CIniReader::ReadFloat(char* szSection, char* szKey, float fltDefaultValue)
+
+int CIniReader::ReadInteger(const char* szSection, const char* szKey, int iDefaultValue)
 {
- char szResult[255];
- char szDefault[255];
- float fltResult;
- sprintf(szDefault, "%f",fltDefaultValue);
- GetPrivateProfileString(szSection,  szKey, szDefault, szResult, 255, m_szFileName); 
- fltResult =  atof(szResult);
- return fltResult;
+   std::string key(szSection);
+   key += "_";
+   key += szKey;
+   int res;
+   if (config_get_int(conf, key.c_str(), &res))
+      return res;
+   else
+      return iDefaultValue;
 }
-bool CIniReader::ReadBoolean(char* szSection, char* szKey, bool bolDefaultValue)
+
+float CIniReader::ReadFloat(const char* szSection, const char* szKey, float fltDefaultValue)
 {
- char szResult[255];
- char szDefault[255];
- bool bolResult;
- sprintf(szDefault, "%s", bolDefaultValue? "True" : "False");
- GetPrivateProfileString(szSection, szKey, szDefault, szResult, 255, m_szFileName); 
- bolResult =  (strcmp(szResult, "True") == 0 || 
-		strcmp(szResult, "true") == 0) ? true : false;
- return bolResult;
+   std::string key(szSection);
+   key += "_";
+   key += szKey;
+   double res;
+   if (config_get_double(conf, key.c_str(), &res))
+      return (float)res;
+   else
+      return fltDefaultValue;
 }
-char* CIniReader::ReadString(char* szSection, char* szKey, const char* szDefaultValue)
+
+bool CIniReader::ReadBoolean(const char* szSection, const char* szKey, bool bolDefaultValue)
 {
- char* szResult = new char[255];
- memset(szResult, 0x00, 255);
- GetPrivateProfileString(szSection,  szKey, 
-		szDefaultValue, szResult, 255, m_szFileName); 
- return szResult;
+   std::string key(szSection);
+   key += "_";
+   key += szKey;
+   bool res;
+   if (config_get_bool(conf, key.c_str(), &res))
+      return res;
+   else
+      return bolDefaultValue;
 }
+
