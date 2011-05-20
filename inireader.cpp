@@ -4,6 +4,8 @@
 CIniReader::CIniReader(const char* szFileName)
 {
    conf = config_file_new(szFileName);
+   if (!conf)
+      conf = config_file_new(NULL);
 }
 
 CIniReader::~CIniReader()
