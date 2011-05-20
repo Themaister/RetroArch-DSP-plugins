@@ -2,6 +2,7 @@
 #define __PLUGIN_HPP
 
 #include "../../ssnes_dsp.h"
+#include "library.hpp"
 #include <stddef.h>
 #include <string>
 
@@ -19,7 +20,7 @@ class Plugin
       std::string ident() const;
 
    private:
-      void *lib_handle;
+      Library library;
       const ssnes_dsp_plugin_t *plug;
       void *plug_handle;
 

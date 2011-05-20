@@ -1,17 +1,16 @@
 #include "plugin.hpp"
-#include <dlfcn.h>
 
 Plugin::Plugin(const ssnes_dsp_info_t *info, const char *lib) : 
-   lib_handle(NULL), plug(NULL), plug_handle(NULL)
+   plug(NULL), plug_handle(NULL)
 {
    if (!lib)
       return;
 
-   lib_handle = dlopen(lib, RTLD_LAZY);
-   if (!lib_handle)
+   library = Library(lib);
+   if (!library)
       return;
 
-   plug_init_t init = reinterpret_cast<plug_init_t>(dlsym(lib_handle, "ssnes_dsp_plugin_init"));
+   plug_init_t init = library.sym<plug_init_t>("ssnes_dsp_plugin_init");
 
    if (!init)
       return;
@@ -53,7 +52,4 @@ Plugin::~Plugin()
 {
    if (plug_handle)
       plug->free(plug_handle);
-
-   if (lib_handle)
-      dlclose(lib_handle);
 }

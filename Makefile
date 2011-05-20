@@ -1,6 +1,6 @@
-TARGETS = snes_reverb.so snes_wah.so snes_phaser.so snes_iir.so snes_echo.so
+TARGETS = snes_reverb.so snes_wah.so snes_phaser.so snes_iir.so snes_echo.so snes_meta.so
 
-CXXFLAGS += -O3 -g -fPIC -Wall -pedantic
+CXXFLAGS += -O3 -g -fPIC -Wall -pedantic -std=gnu++0x
 
 all: $(TARGETS)
 
@@ -10,6 +10,7 @@ SNES_WAH_OBJ = snes_wah.o wahwah.o $(INIREAD_OBJ)
 SNES_PHASER_OBJ = snes_phaser.o phaser.o $(INIREAD_OBJ)
 SNES_IIR_OBJ = snes_iir.o iirfilters.o $(INIREAD_OBJ)
 SNES_ECHO_OBJ = snes_echo.o echo.o $(INIREAD_OBJ)
+SNES_META_OBJ = gui/meta/meta.o gui/meta/plugin.o gui/meta/snes_meta.o $(INIREAD_OBJ)
 
 LDFLAGS += -shared -Wl,--no-undefined
 
@@ -28,11 +29,15 @@ snes_iir.so: $(SNES_IIR_OBJ)
 snes_echo.so: $(SNES_ECHO_OBJ)
 	$(CXX) -o $@ $(SNES_ECHO_OBJ) $(LDFLAGS)
 
+snes_meta.so: $(SNES_META_OBJ)
+	$(CXX) -o $@ $(SNES_META_OBJ) $(LDFLAGS) -ldl
+
 %.o: %.cpp
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
 clean:
 	rm -f *.so
 	rm -f *.o
+	rm -f gui/meta/*.o
 
 .PHONY: clean
