@@ -4,7 +4,7 @@
 // A meta plugin that chains other DSPs ... Pretty much
 #include "../../ssnes_dsp.h"
 
-#include <phoenix.hpp>
+#include "plugin.hpp"
 #include <memory>
 #include <vector>
 
@@ -17,8 +17,9 @@ class MetaDSP
       void process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in);
 
    private:
-      ConfigWindow window;
-      std::vector<std::shared_ptr<Plugin>> plugins;
+      static const unsigned max_plugs = 8;
+      std::shared_ptr<Plugin> plugins[max_plugs];
+      float sample_rate;
 };
 
 #endif

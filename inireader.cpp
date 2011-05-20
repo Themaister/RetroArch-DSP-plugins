@@ -76,3 +76,18 @@ bool CIniReader::ReadBoolean(const char* szSection, const char* szKey, bool bolD
       return bolDefaultValue;
 }
 
+std::string CIniReader::ReadString(const char *szSection, const char *szKey, const char *szDefaultValue)
+{
+   std::string key(szSection);
+   key += "_";
+   key += szKey;
+   char *str;
+   if (config_get_string(conf, key.c_str(), &str))
+   {
+      std::string ret = str;
+      free(str);
+      return ret;
+   }
+   else
+      return szDefaultValue;
+}

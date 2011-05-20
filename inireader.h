@@ -12,6 +12,7 @@ class CIniReader
       int ReadInteger (const char *szSection, const char* szKey, int iDefaultValue);
       float ReadFloat (const char *szSection, const char* szKey, float fltDefaultValue);
       bool ReadBoolean (const char *szSection, const char* szKey, bool bolDefaultValue);
+      std::string ReadString (const char *szSection, const char *szKey, const char *szDefaultValue);
 
    private:
       config_file_t *conf;
