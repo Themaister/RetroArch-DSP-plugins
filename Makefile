@@ -10,7 +10,7 @@ SNES_WAH_OBJ = snes_wah.o wahwah.o $(INIREAD_OBJ)
 SNES_PHASER_OBJ = snes_phaser.o phaser.o $(INIREAD_OBJ)
 SNES_IIR_OBJ = snes_iir.o iirfilters.o $(INIREAD_OBJ)
 SNES_ECHO_OBJ = snes_echo.o echo.o $(INIREAD_OBJ)
-SNES_META_OBJ = gui/meta/meta.o gui/meta/plugin.o gui/meta/snes_meta.o $(INIREAD_OBJ)
+SNES_META_OBJ = meta/meta.o meta/plugin.o meta/snes_meta.o $(INIREAD_OBJ)
 
 LDFLAGS += -shared -Wl,--no-undefined
 
@@ -38,6 +38,6 @@ snes_meta.so: $(SNES_META_OBJ)
 clean:
 	rm -f *.so
 	rm -f *.o
-	rm -f gui/meta/*.o
+	rm -f meta/*.o
 
 .PHONY: clean

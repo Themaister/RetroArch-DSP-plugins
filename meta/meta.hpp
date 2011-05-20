@@ -2,7 +2,7 @@
 #define __META_HPP
 
 // A meta plugin that chains other DSPs ... Pretty much
-#include "../../ssnes_dsp.h"
+#include "../ssnes_dsp.h"
 
 #include "plugin.hpp"
 #include <memory>

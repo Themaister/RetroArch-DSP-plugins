@@ -1,7 +1,7 @@
 #ifndef __PLUGIN_HPP
 #define __PLUGIN_HPP
 
-#include "../../ssnes_dsp.h"
+#include "../ssnes_dsp.h"
 #include "library.hpp"
 #include <stddef.h>
 #include <string>

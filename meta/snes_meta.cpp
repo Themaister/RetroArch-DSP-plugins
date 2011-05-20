@@ -1,4 +1,4 @@
-#include "../../ssnes_dsp.h"
+#include "../ssnes_dsp.h"
 #include "meta.hpp"
 
 static void dsp_free(void *handle)

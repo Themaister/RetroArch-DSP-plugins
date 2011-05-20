@@ -1,5 +1,5 @@
 #include "meta.hpp"
-#include "../../inireader.h"
+#include "../inireader.h"
 
 MetaDSP::MetaDSP(float input_rate) : sample_rate(input_rate)
 {
