@@ -1,9 +1,19 @@
 #include "inireader.h"
-#include <string>
+#include <stdlib.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 CIniReader::CIniReader(const char* szFileName)
 {
-   conf = config_file_new(szFileName);
+   std::string base = GetBaseDir(szFileName);
+   base += "/";
+#ifndef _WIN32
+   base += "."; // Hidden file in $HOME
+#endif
+   base += szFileName;
+   conf = config_file_new(base.c_str());
    if (!conf)
       conf = config_file_new(NULL);
 }
@@ -12,6 +22,22 @@ CIniReader::~CIniReader()
 {
    if (conf)
       config_file_free(conf);
+}
+
+std::string CIniReader::GetBaseDir(const char *filename)
+{
+#ifdef _WIN32
+   char buf[256];
+   GetCurrentDirectory(sizeof(buf), buf);
+   return buf;
+#else
+   (void)filename;
+   const char *home = getenv("HOME");
+   if (home)
+      return home;
+   else
+      return "/etc";
+#endif
 }
 
 int CIniReader::ReadInteger(const char* szSection, const char* szKey, int iDefaultValue)

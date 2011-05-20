@@ -2,6 +2,7 @@
 #define INIREADER_H
 
 #include "config_file.h"
+#include <string>
 
 class CIniReader
 {
@@ -14,6 +15,7 @@ class CIniReader
 
    private:
       config_file_t *conf;
+      static std::string GetBaseDir(const char *filename);
 };
 
 #endif//INIREADER_H

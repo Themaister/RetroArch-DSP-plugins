@@ -8,10 +8,10 @@ IIRFilter iir_l;
 IIRFilter iir_r;
 static void* dsp_init(const ssnes_dsp_info_t *info)
 {
-	 CIniReader iniReader(".\\ssnes_effect.ini");
-	 int type = iniReader.ReadInteger("IIR", "Type", 0); 
-	 float freq = iniReader.ReadFloat("IIR","Filter Frequency",1024.0);
-	 int gain = iniReader.ReadInteger("IIR","Filter Gain",5);
+	 CIniReader iniReader("ssnes_effect.cfg");
+	 int type = iniReader.ReadInteger("iir", "type", 0); 
+	 float freq = iniReader.ReadFloat("iir","filter_frequency",1024.0);
+	 int gain = iniReader.ReadInteger("iir","filter_gain",5);
 	 iir_l.init(info->input_rate,type);
 	 iir_l.setFrequency(freq);
 	 iir_l.setQuality(0.707);

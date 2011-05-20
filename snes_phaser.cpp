@@ -9,13 +9,13 @@ Phaser    phase_l;
 Phaser    phase_r;
 static void* dsp_init(const ssnes_dsp_info_t *info)
 {
-	 CIniReader iniReader(".\\ssnes_effect.ini");
-	 float freq = iniReader.ReadFloat("Phaser", "LFO Frequency", 0.4); 
-	 float startphase = iniReader.ReadFloat("Phaser","LFO Start Phase",0);
-	 float fb = iniReader.ReadFloat("Phaser","LFO Feedback",0);
-	 int depth = iniReader.ReadInteger("Phaser","LFO Depth",100);
-	 int stages = iniReader.ReadInteger("Phaser","LFO Stage Amount",2);
-	 int drywet = iniReader.ReadInteger("Phaser","LFO Dry/Wet Ratio",128);
+	 CIniReader iniReader("ssnes_effect.cfg");
+	 float freq = iniReader.ReadFloat("phaser", "lfo_frequency", 0.4); 
+	 float startphase = iniReader.ReadFloat("phaser","lfo_start_phase",0);
+	 float fb = iniReader.ReadFloat("phaser","lfo_feedback",0);
+	 int depth = iniReader.ReadInteger("phaser","lfo_depth",100);
+	 int stages = iniReader.ReadInteger("phaser","lfo_stage_amount",2);
+	 int drywet = iniReader.ReadInteger("phaser","lfo_dry_wet_ratio",128);
 	 phase_l.SetLFOFreq(freq);
 	 phase_l.SetLFOStartPhase(startphase);
 	 phase_l.SetFeedback(fb);

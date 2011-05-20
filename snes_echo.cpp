@@ -8,9 +8,9 @@ Echo echo_l;
 Echo echo_r;
 static void* dsp_init(const ssnes_dsp_info_t *info)
 {
-	 CIniReader iniReader(".\\ssnes_effect.ini");
-	 int amp = iniReader.ReadInteger("Echo", "Amplification", 128); 
-	 int delay = iniReader.ReadInteger("Echo","Delay",200);
+	 CIniReader iniReader("ssnes_effect.cfg");
+	 int amp = iniReader.ReadInteger("echo", "amplification", 128); 
+	 int delay = iniReader.ReadInteger("echo","delay",200);
 	 echo_l.SetAmp(amp);
 	 echo_l.SetDelay(delay);
 	 echo_l.SetSampleRate(info->input_rate);

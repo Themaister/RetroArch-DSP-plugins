@@ -8,12 +8,12 @@ revmodel rev_l;
 revmodel rev_r;
 static void* dsp_init(const ssnes_dsp_info_t *info)
 {
-	 CIniReader iniReader(".\\ssnes_effect.ini");
-	 float drytime = iniReader.ReadFloat("Reverb", "Dry Time", 0.43); 
-	 float wettime = iniReader.ReadFloat("Reverb","Wet Time",0.57);
-	 float damping = iniReader.ReadFloat("Reverb","Damping",0.45);
-	 float roomwidth = iniReader.ReadFloat("Reverb","Room Width",0.56);
-	 float roomsize = iniReader.ReadFloat("Reverb","Room Size",0.56);
+	 CIniReader iniReader("ssnes_effect.cfg");
+	 float drytime = iniReader.ReadFloat("reverb", "dry_time", 0.43); 
+	 float wettime = iniReader.ReadFloat("reverb","wet_time",0.57);
+	 float damping = iniReader.ReadFloat("reverb","damping",0.45);
+	 float roomwidth = iniReader.ReadFloat("reverb","room_width",0.56);
+	 float roomsize = iniReader.ReadFloat("reverb","room_size",0.56);
 	 rev_l.setdamp(damping);
 	 rev_l.setdry(drytime);
 	 rev_l.setwet(wettime);

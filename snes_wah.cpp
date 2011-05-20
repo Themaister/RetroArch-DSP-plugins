@@ -8,12 +8,12 @@ WahWah    wah_l;
 WahWah    wah_r;
 static void* dsp_init(const ssnes_dsp_info_t *info)
 {
-	 CIniReader iniReader(".\\ssnes_effect.ini");
-	 float freq = iniReader.ReadFloat("Wah", "LFO Frequency",1.5); 
-	 float startphase = iniReader.ReadFloat("Wah","LFO Start Phase",0.0);
-	 float res = iniReader.ReadFloat("Wah","LFO Resonance",2.5);
-	 float depth = iniReader.ReadInteger("Wah","LFO Depth",0.70);
-	 float freqofs = iniReader.ReadInteger("Wah","LFO Frequency Offset",0.30);
+	 CIniReader iniReader("ssnes_effect.cfg");
+	 float freq = iniReader.ReadFloat("wah", "lfo_frequency",1.5); 
+	 float startphase = iniReader.ReadFloat("wah","lfo_start_phase",0.0);
+	 float res = iniReader.ReadFloat("wah","lfo_resonance",2.5);
+	 float depth = iniReader.ReadInteger("wah","lfo_depth",0.70);
+	 float freqofs = iniReader.ReadInteger("wah","lfo_frequency_offset",0.30);
 	 wah_l.SetDepth(depth);
 	 wah_l.SetFreqOffset(freqofs);
 	 wah_l.SetLFOFreq(freq);
