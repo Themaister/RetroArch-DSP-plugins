@@ -1,5 +1,6 @@
 #include "meta.hpp"
 #include "../inireader.h"
+#include <iostream>
 
 MetaDSP::MetaDSP(float input_rate, float output_rate) : sample_rate(input_rate)
 {
@@ -31,6 +32,10 @@ MetaDSP::MetaDSP(float input_rate, float output_rate) : sample_rate(input_rate)
 
    info.output_rate = output_rate;
    resampler_plugin = std::make_shared<Plugin>(&info, resamp_plug.c_str());
+
+   for (unsigned i = 0; i < max_plugs; i++)
+      std::cerr << "[MetaDSP]: Plugin #" << i << ": " << plugins[i]->ident() << std::endl;
+   std::cerr << "[MetaDSP]: Resampler: " << resampler_plugin->ident() << std::endl;
 }
 
 void MetaDSP::show()

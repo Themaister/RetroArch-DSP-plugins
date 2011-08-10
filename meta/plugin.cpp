@@ -48,7 +48,7 @@ std::string Plugin::ident() const
    if (plug_handle)
       return plug->ident ? plug->ident : "Unknown";
    else
-      return "Invalid";
+      return "None";
 }
 
 Plugin::~Plugin()
