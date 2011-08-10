@@ -3,6 +3,8 @@ TARGETS = snes_reverb.dll snes_wah.dll snes_phaser.dll snes_iir.dll snes_echo.dl
 CXXFLAGS += -O3 -g -Wall -pedantic -std=gnu++0x
 CXX = g++
 
+HEADERS = $(wildcard *.h) $(wildcard *.hpp)
+
 all: $(TARGETS)
 
 INIREAD_OBJ = inireader.o config_file.o
@@ -33,7 +35,7 @@ snes_echo.dll: $(SNES_ECHO_OBJ)
 snes_meta.dll: $(SNES_META_OBJ)
 	$(CXX) -o $@ $(SNES_META_OBJ) $(LDFLAGS)
 
-%.o: %.cpp
+%.o: %.cpp $(HEADERS)
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
 clean:

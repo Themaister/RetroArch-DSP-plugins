@@ -9,6 +9,7 @@
 
 #include <utility>
 #include <stddef.h>
+#include <string.h>
 
 class Library
 {
@@ -56,7 +57,12 @@ class Library
 #ifdef _WIN32
             return reinterpret_cast<T>(GetProcAddress(library_handle, sym));
 #else
-            return reinterpret_cast<T>(dlsym(library_handle, sym));
+            static_assert(sizeof(T) == sizeof(void*), "Function pointers cannot be cast from void* o.O");
+            T ptr;
+            void *symbol = dlsym(library_handle, sym);
+            // Circumvent illegality of function pointer casts from void*. :)
+            memcpy(&ptr, &symbol, sizeof(T));
+            return ptr;
 #endif
          }
          else
