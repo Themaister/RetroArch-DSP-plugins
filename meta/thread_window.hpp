@@ -1,11 +1,13 @@
 #ifndef THREAD_WINDOW_HPP__
 #define THREAD_WINDOW_HPP__
 
-#include <phoenix.hpp>
 #include <iostream>
 #include <signal.h>
 #include <thread>
+#include "meta.hpp"
 
+#include "meta_layout.hpp"
+#include <phoenix.hpp>
 using namespace phoenix;
 
 class ThreadWindowImpl : public Window
@@ -15,15 +17,6 @@ class ThreadWindowImpl : public Window
       {
          setTitle("SSNES Meta DSP");
          onClose = [this]() { this->setVisible(false); };
-
-         btn.setText("Hai!");
-         btn.onTick = []() { std::cerr << "Foo!" << std::endl; };
-
-         vbox.setMargin(5);
-         vbox.append(btn, 0, 0, 0);
-         setGeometry(vbox.minimumGeometry());
-
-         append(vbox);
 
          timer.onTimeout = [this]() {
             if (should_quit)
@@ -39,32 +32,40 @@ class ThreadWindowImpl : public Window
          timer.setEnabled(true);
       }
 
+      void set_plugin_state(std::shared_ptr<Plugin> *plugs)
+      { 
+         layout.set_plugin_state(plugins = plugs);
+         append(layout.layout());
+         setGeometry(layout.layout().minimumGeometry());
+      }
+
       void quit() { should_quit = true; }
       void show() { should_show = true; }
 
    private:
       Window win;
-      Button btn;
       Timer timer;
 
       volatile sig_atomic_t should_show;
       volatile sig_atomic_t should_quit;
 
-      VerticalLayout vbox;
+      std::shared_ptr<Plugin> *plugins;
+      MetaThreadLayout layout;
 };
 
 class ThreadWindow
 {
    public:
-      ThreadWindow()
+      void start(std::shared_ptr<Plugin> *plugs)
       {
-         thread = std::thread(&ThreadWindow::gui_thread, this);
+         thread = std::thread(&ThreadWindow::gui_thread, this, plugs);
       }
 
-      void gui_thread()
+      void gui_thread(std::shared_ptr<Plugin> *plugs)
       {
          // Window needs to be created in the thread it's supposed to run in, so allocated dynamically :)
          impl = new ThreadWindowImpl;
+         impl->set_plugin_state(plugs);
          OS::main();
          delete impl;
       }

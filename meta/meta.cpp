@@ -34,6 +34,10 @@ MetaDSP::MetaDSP(float input_rate, float output_rate) : sample_rate(input_rate)
    resampler_plugin = std::make_shared<Plugin>(&info, resamp_plug.c_str());
 
    log_options();
+
+#ifdef META_GUI
+   window.start(plugins);
+#endif
 }
 
 void MetaDSP::log_options() const
