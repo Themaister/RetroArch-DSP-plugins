@@ -33,13 +33,27 @@ MetaDSP::MetaDSP(float input_rate, float output_rate) : sample_rate(input_rate)
    info.output_rate = output_rate;
    resampler_plugin = std::make_shared<Plugin>(&info, resamp_plug.c_str());
 
+   log_options();
+}
+
+void MetaDSP::log_options() const
+{
    for (unsigned i = 0; i < max_plugs; i++)
+   {
       std::cerr << "[MetaDSP]: Plugin #" << i << ": " << plugins[i]->ident() << std::endl;
-   std::cerr << "[MetaDSP]: Resampler: " << resampler_plugin->ident() << std::endl;
+      auto list = plugins[i]->options();
+
+      for (auto itr = list.begin(); itr != list.end(); ++itr)
+         std::cerr << "\tOption ID #" << itr->id << ": " << itr->description << std::endl; 
+   }
 }
 
 void MetaDSP::show()
-{}
+{
+#ifdef META_GUI
+   window.show();
+#endif
+}
 
 // Process the chain.
 void MetaDSP::process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in)

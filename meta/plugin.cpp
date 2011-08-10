@@ -76,9 +76,9 @@ const std::list<PluginOption>& Plugin::options() const
    }
 }
 
-void Plugin::set_option(const PluginOption &option, double value)
+void Plugin::set_option(PluginOption::ID id, double value)
 {
    if (plug_handle)
-      reinterpret_cast<AbstractPlugin*>(plug_handle)->set_option(option, value);
+      reinterpret_cast<AbstractPlugin*>(plug_handle)->set_option(id, value);
 }
 

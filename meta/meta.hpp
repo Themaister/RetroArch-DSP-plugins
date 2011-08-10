@@ -8,6 +8,10 @@
 #include <memory>
 #include <vector>
 
+#ifdef META_GUI
+#include "thread_window.hpp"
+#endif
+
 class MetaDSP
 {
    public:
@@ -17,10 +21,16 @@ class MetaDSP
       void process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in);
 
    private:
-      static const unsigned max_plugs = 8;
+      enum { max_plugs = 8 };
       std::shared_ptr<Plugin> plugins[max_plugs];
       std::shared_ptr<Plugin> resampler_plugin;
       float sample_rate;
+
+      void log_options() const;
+
+#ifdef META_GUI
+      ThreadWindow window;
+#endif
 };
 
 #endif

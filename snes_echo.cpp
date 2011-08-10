@@ -11,11 +11,52 @@ struct PlugEcho : public AbstractPlugin
    Echo echo_l;
    Echo echo_r;
    float buf[4096];
+
+   PlugEcho()
+   {
+      PluginOption opt = {0};
+
+      opt.id = ECHO;
+      opt.description = "Delay";
+      opt.min = 1.0;
+      opt.max = 1000.0;
+      opt.current = delay;
+      dsp_options.push_back(opt);
+
+      opt.id = AMP;
+      opt.description = "Amplification";
+      opt.min = 1.0;
+      opt.max = 500.0;
+      opt.current = amp;
+      dsp_options.push_back(opt);
+   }
+
+   void set_option(PluginOption::ID id, double val)
+   {
+      switch (id)
+      {
+         case 0:
+            echo_l.SetDelay(val);
+            echo_r.SetDelay(val);
+            break;
+
+         case 1:
+            echo_l.SetAmp(val);
+            echo_r.SetAmp(val);
+            break;
+      }
+   }
+
+   enum IDs : PluginOption::ID { ECHO, AMP };
+
+   int amp;
+   int delay;
 };
 
 static void* dsp_init(const ssnes_dsp_info_t *info)
 {
    CIniReader iniReader("ssnes_effect.cfg");
+
    int amp = iniReader.ReadInteger("echo", "amplification", 128); 
    int delay = iniReader.ReadInteger("echo","delay",200);
 
@@ -26,6 +67,9 @@ static void* dsp_init(const ssnes_dsp_info_t *info)
    echo->echo_r.SetAmp(amp);
    echo->echo_r.SetDelay(delay);
    echo->echo_r.SetSampleRate(info->input_rate);
+
+   echo->amp = amp;
+   echo->delay = delay;
 
    return echo;
 }

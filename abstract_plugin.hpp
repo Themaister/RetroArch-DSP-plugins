@@ -3,10 +3,13 @@
 
 #include <string>
 #include <list>
+#include <iostream>
 
 struct PluginOption
 {
-   unsigned id;
+   typedef unsigned ID;
+
+   ID id;
    std::string description;
    
    double min;
@@ -20,8 +23,14 @@ class AbstractPlugin
    public:
       virtual bool is_resampler() const { return false; };
       virtual const std::list<PluginOption>& options() { return dsp_options; }
-      virtual void set_option(const PluginOption&, double) {}
+      virtual void set_option(PluginOption::ID id, double val)
+      {
+         std::cerr << "[MetaDSP]: Unimplemented, setting option #" << id <<
+            "to: " << val << std::endl;
+      }
+
       virtual ~AbstractPlugin() {}
+
    protected:
       std::list<PluginOption> dsp_options;
 };
