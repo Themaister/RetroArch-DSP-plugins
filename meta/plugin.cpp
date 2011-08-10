@@ -22,6 +22,9 @@ Plugin::Plugin(const ssnes_dsp_info_t *info, const char *lib) :
    plug_handle = plug->init(info);
 }
 
+Plugin::Plugin() : plug(NULL), plug_handle(NULL)
+{}
+
 void Plugin::process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in)
 {
    if (plug_handle)
@@ -53,3 +56,29 @@ Plugin::~Plugin()
    if (plug_handle)
       plug->free(plug_handle);
 }
+
+bool Plugin::is_resampler() const
+{
+   if (plug_handle)
+      return reinterpret_cast<AbstractPlugin*>(plug_handle)->is_resampler();
+   else
+      return false;
+}
+
+const std::list<PluginOption>& Plugin::options() const
+{
+   if (plug_handle)
+      return reinterpret_cast<AbstractPlugin*>(plug_handle)->options();
+   else
+   {
+      static std::list<PluginOption> static_opts;
+      return static_opts;
+   }
+}
+
+void Plugin::set_option(const PluginOption &option, double value)
+{
+   if (plug_handle)
+      reinterpret_cast<AbstractPlugin*>(plug_handle)->set_option(option, value);
+}
+

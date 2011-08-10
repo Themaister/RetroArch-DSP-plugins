@@ -5,47 +5,56 @@
 #include "phaser.h"
 #include "wahwah.h"
 #include "inireader.h"
-Phaser    phase_l;
-Phaser    phase_r;
+#include "abstract_plugin.hpp"
+
+struct PlugPhaser : public AbstractPlugin
+{
+   Phaser phase_l;
+   Phaser phase_r;
+   float buf[4096];
+};
+
 static void* dsp_init(const ssnes_dsp_info_t *info)
 {
-	 CIniReader iniReader("ssnes_effect.cfg");
-	 float freq = iniReader.ReadFloat("phaser", "lfo_frequency", 0.4); 
-	 float startphase = iniReader.ReadFloat("phaser","lfo_start_phase",0);
-	 float fb = iniReader.ReadFloat("phaser","lfo_feedback",0);
-	 int depth = iniReader.ReadInteger("phaser","lfo_depth",100);
-	 int stages = iniReader.ReadInteger("phaser","lfo_stage_amount",2);
-	 int drywet = iniReader.ReadInteger("phaser","lfo_dry_wet_ratio",128);
-	 phase_l.SetLFOFreq(freq);
-	 phase_l.SetLFOStartPhase(startphase);
-	 phase_l.SetFeedback(fb);
-	 phase_l.SetDepth(depth);
-	 phase_l.SetStages(stages);
-	 phase_l.SetDryWet(drywet);
-	 phase_l.init(info->input_rate);
-	 phase_r.SetLFOFreq(freq);
-	 phase_r.SetLFOStartPhase(startphase);
-	 phase_r.SetFeedback(fb);
-	 phase_r.SetDepth(depth);
-	 phase_r.SetStages(stages);
-	 phase_r.SetDryWet(drywet);
-	 phase_r.init(info->input_rate);
-    (void)info;
-    return (void*)-1;
+   CIniReader iniReader("ssnes_effect.cfg");
+   float freq = iniReader.ReadFloat("phaser", "lfo_frequency", 0.4); 
+   float startphase = iniReader.ReadFloat("phaser","lfo_start_phase",0);
+   float fb = iniReader.ReadFloat("phaser","lfo_feedback",0);
+   int depth = iniReader.ReadInteger("phaser","lfo_depth",100);
+   int stages = iniReader.ReadInteger("phaser","lfo_stage_amount",2);
+   int drywet = iniReader.ReadInteger("phaser","lfo_dry_wet_ratio",128);
+
+   PlugPhaser *phaser = new PlugPhaser;
+   phaser->phase_l.SetLFOFreq(freq);
+   phaser->phase_l.SetLFOStartPhase(startphase);
+   phaser->phase_l.SetFeedback(fb);
+   phaser->phase_l.SetDepth(depth);
+   phaser->phase_l.SetStages(stages);
+   phaser->phase_l.SetDryWet(drywet);
+   phaser->phase_l.init(info->input_rate);
+   phaser->phase_r.SetLFOFreq(freq);
+   phaser->phase_r.SetLFOStartPhase(startphase);
+   phaser->phase_r.SetFeedback(fb);
+   phaser->phase_r.SetDepth(depth);
+   phaser->phase_r.SetStages(stages);
+   phaser->phase_r.SetDryWet(drywet);
+   phaser->phase_r.init(info->input_rate);
+
+   return phaser;
 }
 
-float buf[4096];
 static void dsp_process(void *data, ssnes_dsp_output_t *output,
       const ssnes_dsp_input_t *input)
 {
-	(void)data;
-	output->samples = buf;
-	int num_samples = input->frames * 2;
-	for (int i = 0; i<num_samples;)
-	{
-		buf[i] = phase_l.Process(input->samples[i]);
+   PlugPhaser *phaser = reinterpret_cast<PlugPhaser*>(data);
+
+   output->samples = phaser->buf;
+   int num_samples = input->frames * 2;
+   for (int i = 0; i<num_samples;)
+   {
+		phaser->buf[i] = phaser->phase_l.Process(input->samples[i]);
 		i++;
-		buf[i] = phase_r.Process(input->samples[i]);
+		phaser->buf[i] = phaser->phase_r.Process(input->samples[i]);
 		i++;
 	}
 	output->frames = input->frames;
@@ -54,15 +63,11 @@ static void dsp_process(void *data, ssnes_dsp_output_t *output,
 
 static void dsp_free(void *data)
 {
-   (void)data;
+   delete reinterpret_cast<PlugPhaser*>(data);
 }
 
-static void dsp_config(void *data)
-{
-	(void)data;
-	// Normally we unhide a GUI window or something,
-	// but we're just going to print to the log instead.
-}
+static void dsp_config(void *)
+{}
 
 const ssnes_dsp_plugin_t dsp_plug = {
 	dsp_init,
@@ -73,7 +78,8 @@ const ssnes_dsp_plugin_t dsp_plug = {
 	"Phaser plugin"
 };
 
-const ssnes_dsp_plugin_t* ssnes_dsp_plugin_init(void)
+SSNES_API_EXPORT const ssnes_dsp_plugin_t* SSNES_API_CALLTYPE ssnes_dsp_plugin_init(void)
 {
    return &dsp_plug;
 }
+

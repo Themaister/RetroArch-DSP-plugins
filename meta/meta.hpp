@@ -11,7 +11,7 @@
 class MetaDSP
 {
    public:
-      MetaDSP(float input_rate);
+      MetaDSP(float input_rate, float output_rate);
       void show();
       // One process that does it all.
       void process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in);
@@ -19,6 +19,7 @@ class MetaDSP
    private:
       static const unsigned max_plugs = 8;
       std::shared_ptr<Plugin> plugins[max_plugs];
+      std::shared_ptr<Plugin> resampler_plugin;
       float sample_rate;
 };
 

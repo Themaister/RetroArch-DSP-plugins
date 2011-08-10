@@ -4,44 +4,52 @@
 #include <stdlib.h>
 #include "wahwah.h"
 #include "inireader.h"
-WahWah    wah_l;
-WahWah    wah_r;
+#include "abstract_plugin.hpp"
+
+struct PlugWah : public AbstractPlugin
+{
+   WahWah wah_l;
+   WahWah wah_r;
+   float buf[4096];
+};
+
 static void* dsp_init(const ssnes_dsp_info_t *info)
 {
-	 CIniReader iniReader("ssnes_effect.cfg");
-	 float freq = iniReader.ReadFloat("wah", "lfo_frequency",1.5); 
-	 float startphase = iniReader.ReadFloat("wah","lfo_start_phase",0.0);
-	 float res = iniReader.ReadFloat("wah","lfo_resonance",2.5);
-	 float depth = iniReader.ReadInteger("wah","lfo_depth",0.70);
-	 float freqofs = iniReader.ReadInteger("wah","lfo_frequency_offset",0.30);
-	 wah_l.SetDepth(depth);
-	 wah_l.SetFreqOffset(freqofs);
-	 wah_l.SetLFOFreq(freq);
-	 wah_l.SetLFOStartPhase(startphase);
-	 wah_l.SetResonance(res);
-	 wah_l.init(info->input_rate);
-	 wah_r.SetDepth(depth);
-	 wah_r.SetFreqOffset(freqofs);
-	 wah_r.SetLFOFreq(freq);
-	 wah_r.SetLFOStartPhase(startphase);
-	 wah_r.SetResonance(res);
-	 wah_r.init(info->input_rate);
-    (void)info;
-    return (void*)-1;
+   CIniReader iniReader("ssnes_effect.cfg");
+   float freq = iniReader.ReadFloat("wah", "lfo_frequency",1.5); 
+   float startphase = iniReader.ReadFloat("wah","lfo_start_phase",0.0);
+   float res = iniReader.ReadFloat("wah","lfo_resonance",2.5);
+   float depth = iniReader.ReadInteger("wah","lfo_depth",0.70);
+   float freqofs = iniReader.ReadInteger("wah","lfo_frequency_offset",0.30);
+
+   PlugWah *wah = new PlugWah;
+   wah->wah_l.SetDepth(depth);
+   wah->wah_l.SetFreqOffset(freqofs);
+   wah->wah_l.SetLFOFreq(freq);
+   wah->wah_l.SetLFOStartPhase(startphase);
+   wah->wah_l.SetResonance(res);
+   wah->wah_l.init(info->input_rate);
+   wah->wah_r.SetDepth(depth);
+   wah->wah_r.SetFreqOffset(freqofs);
+   wah->wah_r.SetLFOFreq(freq);
+   wah->wah_r.SetLFOStartPhase(startphase);
+   wah->wah_r.SetResonance(res);
+   wah->wah_r.init(info->input_rate);
+
+   return wah;
 }
 
-float buf[4096];
 static void dsp_process(void *data, ssnes_dsp_output_t *output,
       const ssnes_dsp_input_t *input)
 {
-	(void)data;
-	output->samples = buf;
+   PlugWah *wah = reinterpret_cast<PlugWah*>(data);
+	output->samples = wah->buf;
 	int num_samples = input->frames * 2;
 	for (int i = 0; i<num_samples;)
 	{
-		buf[i] = wah_l.Process(input->samples[i]);
+		wah->buf[i] = wah->wah_l.Process(input->samples[i]);
 		i++;
-		buf[i] = wah_r.Process(input->samples[i]);
+		wah->buf[i] = wah->wah_r.Process(input->samples[i]);
 		i++;
 	}
 	output->frames = input->frames;
@@ -50,15 +58,11 @@ static void dsp_process(void *data, ssnes_dsp_output_t *output,
 
 static void dsp_free(void *data)
 {
-   (void)data;
+   delete reinterpret_cast<PlugWah*>(data);
 }
 
-static void dsp_config(void *data)
-{
-	(void)data;
-	// Normally we unhide a GUI window or something,
-	// but we're just going to print to the log instead.
-}
+static void dsp_config(void*)
+{}
 
 const ssnes_dsp_plugin_t dsp_plug = {
 	dsp_init,
@@ -69,7 +73,7 @@ const ssnes_dsp_plugin_t dsp_plug = {
 	"Wah plugin"
 };
 
-const ssnes_dsp_plugin_t* ssnes_dsp_plugin_init(void)
+SSNES_API_EXPORT const ssnes_dsp_plugin_t* SSNES_API_CALLTYPE ssnes_dsp_plugin_init(void)
 {
    return &dsp_plug;
 }

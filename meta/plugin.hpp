@@ -5,11 +5,14 @@
 #include "library.hpp"
 #include <stddef.h>
 #include <string>
+#include <list>
+#include "../abstract_plugin.hpp"
 
 class Plugin
 {
    public:
       Plugin(const ssnes_dsp_info_t *info, const char *lib = NULL);
+      Plugin();
       ~Plugin();
 
       void operator=(Plugin&) = delete;
@@ -18,6 +21,10 @@ class Plugin
       void process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in);
       void show();
       std::string ident() const;
+
+      bool is_resampler() const;
+      const std::list<PluginOption>& options() const;
+      void set_option(const PluginOption &option, double value);
 
    private:
       Library library;

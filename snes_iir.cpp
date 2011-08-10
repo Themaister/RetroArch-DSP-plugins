@@ -4,38 +4,47 @@
 #include <stdlib.h>
 #include "iirfilters.h"
 #include "inireader.h"
-IIRFilter iir_l;
-IIRFilter iir_r;
+#include "abstract_plugin.hpp"
+
+struct PlugIIR : public AbstractPlugin
+{
+   IIRFilter iir_l;
+   IIRFilter iir_r;
+   float buf[4096];
+};
+
 static void* dsp_init(const ssnes_dsp_info_t *info)
 {
-	 CIniReader iniReader("ssnes_effect.cfg");
-	 int type = iniReader.ReadInteger("iir", "type", 0); 
-	 float freq = iniReader.ReadFloat("iir","filter_frequency",1024.0);
-	 int gain = iniReader.ReadInteger("iir","filter_gain",5);
-	 iir_l.init(info->input_rate,type);
-	 iir_l.setFrequency(freq);
-	 iir_l.setQuality(0.707);
-	 iir_l.setGain(gain);
-	 iir_r.init(info->input_rate,type);
-	 iir_r.setFrequency(freq);
-	 iir_r.setQuality(0.707);
-	 iir_r.setGain(gain);
-    (void)info;
-    return (void*)-1;
+   CIniReader iniReader("ssnes_effect.cfg");
+   int type = iniReader.ReadInteger("iir", "type", 0); 
+   float freq = iniReader.ReadFloat("iir","filter_frequency",1024.0);
+   int gain = iniReader.ReadInteger("iir","filter_gain",5);
+
+   PlugIIR *iir = new PlugIIR;
+   iir->iir_l.init(info->input_rate,type);
+   iir->iir_l.setFrequency(freq);
+   iir->iir_l.setQuality(0.707);
+   iir->iir_l.setGain(gain);
+   iir->iir_r.init(info->input_rate,type);
+   iir->iir_r.setFrequency(freq);
+   iir->iir_r.setQuality(0.707);
+   iir->iir_r.setGain(gain);
+
+   return iir;
 }
 
-float buf[4096];
 static void dsp_process(void *data, ssnes_dsp_output_t *output,
       const ssnes_dsp_input_t *input)
 {
-	(void)data;
-	output->samples = buf;
-	int num_samples = input->frames * 2;
-	for (int i = 0; i<num_samples;)
+   PlugIIR *iir = reinterpret_cast<PlugIIR*>(data);
+
+   output->samples = iir->buf;
+   int num_samples = input->frames * 2;
+   for (int i = 0; i<num_samples;)
 	{
-		buf[i] = iir_l.Process(input->samples[i]);
+		iir->buf[i] = iir->iir_l.Process(input->samples[i]);
 		i++;
-		buf[i] = iir_r.Process(input->samples[i]);
+		iir->buf[i] = iir->iir_r.Process(input->samples[i]);
 		i++;
 	}
 	output->frames = input->frames;
@@ -44,15 +53,11 @@ static void dsp_process(void *data, ssnes_dsp_output_t *output,
 
 static void dsp_free(void *data)
 {
-   (void)data;
+   delete reinterpret_cast<PlugIIR*>(data);
 }
 
-static void dsp_config(void *data)
-{
-	(void)data;
-	// Normally we unhide a GUI window or something,
-	// but we're just going to print to the log instead.
-}
+static void dsp_config(void*)
+{}
 
 const ssnes_dsp_plugin_t dsp_plug = {
 	dsp_init,
@@ -64,7 +69,7 @@ const ssnes_dsp_plugin_t dsp_plug = {
 };
 
 
-const ssnes_dsp_plugin_t* ssnes_dsp_plugin_init(void)
+SSNES_API_EXPORT const ssnes_dsp_plugin_t* SSNES_API_CALLTYPE ssnes_dsp_plugin_init(void)
 {
    return &dsp_plug;
 }

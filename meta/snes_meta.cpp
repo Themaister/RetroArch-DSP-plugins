@@ -3,8 +3,7 @@
 
 static void dsp_free(void *handle)
 {
-   MetaDSP *dsp = reinterpret_cast<MetaDSP*>(handle);
-   delete dsp;
+   delete reinterpret_cast<MetaDSP*>(handle);
 }
 
 static void dsp_config(void *handle)
@@ -21,7 +20,7 @@ static void dsp_process(void *handle, ssnes_dsp_output_t *out, const ssnes_dsp_i
 
 static void *dsp_init(const ssnes_dsp_info_t *info)
 {
-   return reinterpret_cast<void*>(new MetaDSP(info->input_rate));
+   return new MetaDSP(info->input_rate, info->output_rate);
 }
 
 const ssnes_dsp_plugin_t dsp_plug = {

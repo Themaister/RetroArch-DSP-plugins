@@ -4,35 +4,43 @@
 #include <stdlib.h>
 #include "echo.h"
 #include "inireader.h"
-Echo echo_l;
-Echo echo_r;
+#include "abstract_plugin.hpp"
+
+struct PlugEcho : public AbstractPlugin
+{
+   Echo echo_l;
+   Echo echo_r;
+   float buf[4096];
+};
+
 static void* dsp_init(const ssnes_dsp_info_t *info)
 {
-	 CIniReader iniReader("ssnes_effect.cfg");
-	 int amp = iniReader.ReadInteger("echo", "amplification", 128); 
-	 int delay = iniReader.ReadInteger("echo","delay",200);
-	 echo_l.SetAmp(amp);
-	 echo_l.SetDelay(delay);
-	 echo_l.SetSampleRate(info->input_rate);
-	 echo_r.SetAmp(amp);
-	 echo_r.SetDelay(delay);
-	 echo_r.SetSampleRate(info->input_rate);
-    (void)info;
-    return (void*)-1;
+   CIniReader iniReader("ssnes_effect.cfg");
+   int amp = iniReader.ReadInteger("echo", "amplification", 128); 
+   int delay = iniReader.ReadInteger("echo","delay",200);
+
+   PlugEcho *echo = new PlugEcho;
+   echo->echo_l.SetAmp(amp);
+   echo->echo_l.SetDelay(delay);
+   echo->echo_l.SetSampleRate(info->input_rate);
+   echo->echo_r.SetAmp(amp);
+   echo->echo_r.SetDelay(delay);
+   echo->echo_r.SetSampleRate(info->input_rate);
+
+   return echo;
 }
 
-float buf[4096];
 static void dsp_process(void *data, ssnes_dsp_output_t *output,
       const ssnes_dsp_input_t *input)
 {
-	(void)data;
-	output->samples = buf;
+   PlugEcho *echo = reinterpret_cast<PlugEcho*>(data);
+	output->samples = echo->buf;
 	int num_samples = input->frames * 2;
 	for (int i = 0; i<num_samples;)
 	{
-		buf[i] = echo_l.Process(input->samples[i]);
+		echo->buf[i] = echo->echo_l.Process(input->samples[i]);
 		i++;
-		buf[i] = echo_r.Process(input->samples[i]);
+		echo->buf[i] = echo->echo_r.Process(input->samples[i]);
 		i++;
 	}
 	output->frames = input->frames;
@@ -41,15 +49,11 @@ static void dsp_process(void *data, ssnes_dsp_output_t *output,
 
 static void dsp_free(void *data)
 {
-   (void)data;
+   delete reinterpret_cast<PlugEcho*>(data);
 }
 
-static void dsp_config(void *data)
-{
-	(void)data;
-	// Normally we unhide a GUI window or something,
-	// but we're just going to print to the log instead.
-}
+static void dsp_config(void *)
+{}
 
 const ssnes_dsp_plugin_t dsp_plug = {
 	dsp_init,
@@ -60,7 +64,7 @@ const ssnes_dsp_plugin_t dsp_plug = {
 	"Echo plugin"
 };
 
-const ssnes_dsp_plugin_t* ssnes_dsp_plugin_init(void)
+SSNES_API_EXPORT const ssnes_dsp_plugin_t* SSNES_API_CALLTYPE ssnes_dsp_plugin_init(void)
 {
    return &dsp_plug;
 }
