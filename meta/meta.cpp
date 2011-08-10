@@ -43,5 +43,4 @@ void MetaDSP::process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in)
    input[max_plugs - 2].frames = output[max_plugs - 2].frames;
    input[max_plugs - 2].samples = output[max_plugs - 2].samples;
    plugins[max_plugs - 1]->process(out, &input[max_plugs - 2]);
-   out->should_resample = SSNES_TRUE;
 }
