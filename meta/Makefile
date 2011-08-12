@@ -1,28 +1,31 @@
 TARGET := snes-meta-gui.so
 
 CXXFILES := $(wildcard *.cpp)
-OBJ := $(CXXFILES:.cpp=.o) phoenix/phoenix.o ../inireader.o ../config_file.o
-HEADERS = $(wildcard *.hpp)
+MOCFILES := $(wildcard *.moc.hpp)
+OBJ := $(CXXFILES:.cpp=.o) $(MOCFILES:.moc.hpp=.moc.o) ../inireader.o ../config_file.o
+HEADERS := $(wildcard *.hpp)
 
-GTK_CFLAGS = $(shell pkg-config --cflags gtk+-2.0)
-GTK_LIBS = $(shell pkg-config --libs gtk+-2.0)
+QT_CXXFLAGS := $(shell pkg-config --cflags QtCore QtGui)
+QT_LIBS := $(shell pkg-config --libs QtCore QtGui)
 
-INCLUDES = -Iphoenix -I.
+INCLUDES := -I.
 
 all: $(TARGET)
 
 %.o: %.cpp $(HEADERS)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -DMETA_GUI -fPIC -O3 -std=gnu++0x -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(QT_CXXFLAGS) $(INCLUDES) -DMETA_GUI -fPIC -O3 -std=gnu++0x -c -o $@ $<
 
-phoenix/phoenix.o: $(wildcard phoenix/**/*.cpp) $(wildcard phoenix/**/*.hpp)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -fPIC -O3 -std=gnu++0x -DPHOENIX_GTK $(GTK_CFLAGS) -c -o $@ phoenix/phoenix.cpp
+%.moc.o: %.moc.cxx $(HEADERS)
+	$(CXX) $(CXXFLAGS) $(QT_CXXFLAGS) $(INCLUDES) -DMETA_GUI -fPIC -O3 -std=gnu++0x -c -o $@ $<
+
+%.moc.cxx: %.moc.hpp
+	moc -o $@ $< $(INCLUDES)
 
 $(TARGET): $(OBJ)
-	$(CXX) -o $@ $(OBJ) $(GTK_LIBS) -shared -Wl,--no-undefined -lX11 -ldl
+	$(CXX) -o $@ $(OBJ) $(QT_LIBS) -shared -Wl,--no-undefined -ldl
 
 clean:
 	rm -f *.o
-	rm -f phoenix/*.o
 	rm -f *.so
 
 .PHONY: clean
