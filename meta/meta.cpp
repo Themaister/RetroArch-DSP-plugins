@@ -69,6 +69,9 @@ void MetaDSP::events()
 // Process the chain.
 void MetaDSP::process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in)
 {
+#ifdef META_GUI
+   Global::lock();
+#endif
    ssnes_dsp_input_t input[max_plugs];
    ssnes_dsp_output_t output[max_plugs];
 
@@ -86,5 +89,8 @@ void MetaDSP::process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in)
    input[i].frames = output[i].frames;
    input[i].samples = output[i].samples;
    resampler_plugin->process(out, &input[i]);
+#ifdef META_GUI
+   Global::unlock();
+#endif
 }
 

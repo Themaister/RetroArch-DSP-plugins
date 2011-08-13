@@ -12,7 +12,7 @@ struct PlugEcho : public AbstractPlugin
    Echo echo_r;
    float buf[4096];
 
-   PlugEcho()
+   PlugEcho(int delay_, int amp_) : amp(amp_), delay(delay_)
    {
       PluginOption opt = {0};
 
@@ -35,12 +35,12 @@ struct PlugEcho : public AbstractPlugin
    {
       switch (id)
       {
-         case 0:
+         case ECHO:
             echo_l.SetDelay(val);
             echo_r.SetDelay(val);
             break;
 
-         case 1:
+         case AMP:
             echo_l.SetAmp(val);
             echo_r.SetAmp(val);
             break;
@@ -60,7 +60,7 @@ static void* dsp_init(const ssnes_dsp_info_t *info)
    int amp = iniReader.ReadInteger("echo", "amplification", 128); 
    int delay = iniReader.ReadInteger("echo","delay",200);
 
-   PlugEcho *echo = new PlugEcho;
+   PlugEcho *echo = new PlugEcho(delay, amp);
    echo->echo_l.SetAmp(amp);
    echo->echo_l.SetDelay(delay);
    echo->echo_l.SetSampleRate(info->input_rate);
