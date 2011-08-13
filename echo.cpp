@@ -4,6 +4,7 @@
 #include <string.h>
 #include <math.h>
 #include <iostream>
+#include <assert.h>
 using namespace std;
 
 
@@ -27,6 +28,9 @@ Echo::~Echo()
 void Echo::SetDelay( int ms )
 {
 	int newDelay = ms * rate / 1000;
+   if (newDelay == 0)
+      newDelay = 1;
+
 	float *newHistory = new float[newDelay];
 	memset( newHistory, 0, newDelay * sizeof(float) );
 	if ( history )
@@ -92,6 +96,7 @@ float Echo::Process(float in)
 	smp *= f_amp;			
 	smp += in;                
 	history[pos] = smp;       
+   assert(delay);
 	pos = ( pos + 1 ) % delay;
 	return smp;
 }
