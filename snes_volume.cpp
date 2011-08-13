@@ -52,6 +52,7 @@ struct PlugVolume : public AbstractPlugin
       {
          case PAN:
             pan2gain(m_pan_vol_l, m_pan_vol_r, val);
+            break;
 
          default:
             std::cerr << "Err ..." << std::endl;
