@@ -4,9 +4,12 @@
 #define MAIN_WINDOW_HPP__
 
 #include <QWidget>
-#include <QThread>
 #include <memory>
+
+#ifdef META_THREADED
 #include <QMutex>
+#endif
+
 #include <QTabWidget>
 #include <QLabel>
 #include <QSlider>

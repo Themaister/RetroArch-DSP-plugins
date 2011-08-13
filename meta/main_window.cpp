@@ -23,7 +23,7 @@ ThreadWindowImpl::ThreadWindowImpl(std::shared_ptr<Plugin> *plugs, QWidget *pare
    
    tab = new QTabWidget(this);
    for (unsigned i = 0; i < MetaDSP::max_plugs; i++)
-      tab->addTab(new PluginSettings(plugins[i], tab), QString::fromStdString(plugins[i]->ident()));
+      tab->addTab(new PluginSettings(plugins[i], tab), QString::fromUtf8(plugins[i]->ident().c_str()));
 
    vbox->addWidget(tab);
 
@@ -67,7 +67,7 @@ PluginSettings::PluginSettings(std::shared_ptr<Plugin> &plug, QWidget *parent)
    QHBoxLayout *hbox = new QHBoxLayout;
    path = new QLineEdit(this);
    path->setReadOnly(true);
-   path->setText(QString::fromStdString(plugin->path()));
+   path->setText(QString::fromUtf8(plugin->path().c_str()));
    hbox->addWidget(path);
 
    QPushButton *open_btn = new QPushButton("Open", this);
@@ -118,7 +118,7 @@ void PluginSettings::open()
    if (!name.isEmpty())
    {
       Global::lock();
-      plugin = std::make_shared<Plugin>(&Global::get_dsp_info(), name.toStdString().c_str());
+      plugin = std::make_shared<Plugin>(&Global::get_dsp_info(), name.toUtf8().constData());
       path->setText(name); 
       Global::unlock();
       update_controls();
@@ -137,7 +137,7 @@ void PluginSettings::remove()
 void PluginSettings::update_controls()
 {
    if (tab_widget)
-      tab_widget->setTabText(tab_widget->indexOf(this), QString::fromStdString(plugin->ident()));
+      tab_widget->setTabText(tab_widget->indexOf(this), QString::fromUtf8(plugin->ident().c_str()));
 
    foreach (QWidget *widget, widgets)
    {
@@ -183,7 +183,7 @@ PluginSettingDouble::PluginSettingDouble(std::shared_ptr<Plugin> &plug,
    current = opt.d.current;
 
    QHBoxLayout *hbox = new QHBoxLayout;
-   hbox->addWidget(new QLabel(QString::fromStdString(opt.description), this));
+   hbox->addWidget(new QLabel(QString::fromUtf8(opt.description.c_str()), this));
    slider = new QSlider(Qt::Horizontal, this);
    slider->setMinimum(0);
    slider->setMaximum(Intervals);
@@ -226,7 +226,7 @@ PluginSettingInteger::PluginSettingInteger(std::shared_ptr<Plugin> &plug,
    id = opt.id;
 
    QHBoxLayout *hbox = new QHBoxLayout;
-   hbox->addWidget(new QLabel(QString::fromStdString(opt.description), this));
+   hbox->addWidget(new QLabel(QString::fromUtf8(opt.description.c_str()), this));
 
    QSlider *slider = new QSlider(Qt::Horizontal, this);
    slider->setMinimum(opt.i.min);
@@ -257,12 +257,12 @@ PluginSettingSelection::PluginSettingSelection(std::shared_ptr<Plugin> &plug,
 {
    id = opt.id;
    QHBoxLayout *hbox = new QHBoxLayout;
-   hbox->addWidget(new QLabel(QString::fromStdString(opt.description), this));
+   hbox->addWidget(new QLabel(QString::fromUtf8(opt.description.c_str()), this));
 
    combo = new QComboBox(this);
    
    for (auto itr = opt.s.selection.begin(); itr != opt.s.selection.end(); ++itr)
-      combo->addItem(QString::fromStdString(itr->description), QVariant::fromValue(itr->id));
+      combo->addItem(QString::fromUtf8(itr->description.c_str()), QVariant::fromValue(itr->id));
 
    int index = combo->findData(QVariant::fromValue(opt.s.current));
    if (index >= 0)
