@@ -1,7 +1,7 @@
 #include "plugin.hpp"
 
 Plugin::Plugin(const ssnes_dsp_info_t *info, const char *lib) : 
-   plug(NULL), plug_handle(NULL)
+   plug(NULL), plug_handle(NULL), is_enabled(true)
 {
    if (!lib)
       return;
@@ -22,12 +22,12 @@ Plugin::Plugin(const ssnes_dsp_info_t *info, const char *lib) :
    plug_handle = plug->init(info);
 }
 
-Plugin::Plugin() : plug(NULL), plug_handle(NULL)
+Plugin::Plugin() : plug(NULL), plug_handle(NULL), is_enabled(true)
 {}
 
 void Plugin::process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in)
 {
-   if (plug_handle)
+   if (plug_handle && is_enabled)
       plug->process(plug_handle, out, in);
    else // Passthrough
    {
@@ -35,6 +35,11 @@ void Plugin::process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in)
       out->frames = in->frames;
       out->should_resample = SSNES_TRUE;
    }
+}
+
+void Plugin::enabled(bool enable)
+{
+   is_enabled = enable;
 }
 
 void Plugin::show()

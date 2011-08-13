@@ -48,6 +48,9 @@ class PluginSettings : public QWidget
 
    public:
       PluginSettings(std::shared_ptr<Plugin> &plug, QWidget *parent = 0);
+
+   private slots:
+      void enable(int);
       
    private:
       std::shared_ptr<Plugin> &plugin;

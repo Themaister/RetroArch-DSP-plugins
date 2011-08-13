@@ -8,6 +8,7 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QLabel>
+#include <QCheckBox>
 
 ThreadWindowImpl::ThreadWindowImpl(std::shared_ptr<Plugin> *plugs, QWidget *parent)
    : QWidget(parent), plugins(plugs)
@@ -53,11 +54,26 @@ PluginSettings::PluginSettings(std::shared_ptr<Plugin> &plug, QWidget *parent)
 {
    QVBoxLayout *vbox = new QVBoxLayout;
 
+   QCheckBox *box = new QCheckBox("Enable", this);
+   box->setCheckState(Qt::Checked);
+   connect(box, SIGNAL(stateChanged(int)), this, SLOT(enable(int)));
+   vbox->addWidget(box);
+
    auto list = plugin->options();
    for (auto itr = list.begin(); itr != list.end(); ++itr)
       vbox->addWidget(new PluginSetting(plugin, *itr, this));
 
    setLayout(vbox);
+}
+
+void PluginSettings::enable(int val)
+{
+   Global::lock();
+   if (val == Qt::Checked)
+      plugin->enabled(true);
+   else if (val == Qt::Unchecked)
+      plugin->enabled(false);
+   Global::unlock();
 }
 
 PluginSetting::PluginSetting(std::shared_ptr<Plugin> &plug,

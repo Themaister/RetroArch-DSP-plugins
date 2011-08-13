@@ -22,6 +22,8 @@ class Plugin
       void show();
       std::string ident() const;
 
+      void enabled(bool enable = true);
+
       bool is_resampler() const;
       const std::list<PluginOption>& options() const;
       void set_option(PluginOption::ID id, double value);
@@ -32,6 +34,8 @@ class Plugin
       void *plug_handle;
 
       typedef const ssnes_dsp_plugin_t* (*plug_init_t)(void);
+
+      bool is_enabled;
 };
 
 #endif
