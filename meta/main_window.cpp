@@ -9,6 +9,9 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QCheckBox>
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QDir>
 
 ThreadWindowImpl::ThreadWindowImpl(std::shared_ptr<Plugin> *plugs, QWidget *parent)
    : QWidget(parent), plugins(plugs)
@@ -50,18 +53,40 @@ MetaApplication::~MetaApplication()
 }
 
 PluginSettings::PluginSettings(std::shared_ptr<Plugin> &plug, QWidget *parent)
-   : QWidget(parent), plugin(plug)
+   : QWidget(parent), plugin(plug), tab_widget(qobject_cast<QTabWidget*>(parent))
 {
    QVBoxLayout *vbox = new QVBoxLayout;
+   vbox->setAlignment(Qt::AlignTop);
 
    QCheckBox *box = new QCheckBox("Enable", this);
    box->setCheckState(Qt::Checked);
    connect(box, SIGNAL(stateChanged(int)), this, SLOT(enable(int)));
    vbox->addWidget(box);
 
+   QHBoxLayout *hbox = new QHBoxLayout;
+   path = new QLineEdit(this);
+   path->setReadOnly(true);
+   path->setText(QString::fromStdString(plugin->path()));
+   hbox->addWidget(path);
+
+   QPushButton *open_btn = new QPushButton("Open", this);
+   QPushButton *remove_btn = new QPushButton("Remove", this);
+   hbox->addWidget(open_btn);
+   hbox->addWidget(remove_btn);
+   connect(open_btn, SIGNAL(clicked()), this, SLOT(open()));
+   connect(remove_btn, SIGNAL(clicked()), this, SLOT(remove()));
+   vbox->addLayout(hbox);
+
+   options = new QVBoxLayout;
    auto list = plugin->options();
    for (auto itr = list.begin(); itr != list.end(); ++itr)
-      vbox->addWidget(new PluginSetting(plugin, *itr, this));
+   {
+      QWidget *widget = new PluginSetting(plugin, *itr, this);
+      widgets.append(widget);
+      options->addWidget(widget);
+   }
+
+   vbox->addLayout(options);
 
    setLayout(vbox);
 }
@@ -74,6 +99,64 @@ void PluginSettings::enable(int val)
    else if (val == Qt::Unchecked)
       plugin->enabled(false);
    Global::unlock();
+}
+
+void PluginSettings::open()
+{
+#if defined(_WIN32)
+#define LIBRARY_EXTENSION "*.dll"
+#elif defined(__APPLE__)
+#define LIBRARY_EXTENSION "*.dylib"
+#else
+#define LIBRARY_EXTENSION "*.so"
+#endif
+
+   QFileInfo info(plugin->path().c_str());
+   QDir dir = info.dir();
+   QString dir_path = dir.path();
+
+   // TODO: Try to find a way for this not to block :s
+   QString name = QFileDialog::getOpenFileName(this, "Open DSP plugin ...",
+         dir_path,
+         "Dynamic library (" LIBRARY_EXTENSION ")");
+   if (!name.isEmpty())
+   {
+      Global::lock();
+      plugin = std::make_shared<Plugin>(&Global::get_dsp_info(), name.toStdString().c_str());
+      path->setText(name); 
+      Global::unlock();
+      update_controls();
+   }
+}
+
+void PluginSettings::remove()
+{
+   Global::lock();
+   plugin = std::make_shared<Plugin>();
+   path->clear();
+   Global::unlock();
+   update_controls();
+}
+
+void PluginSettings::update_controls()
+{
+   if (tab_widget)
+      tab_widget->setTabText(tab_widget->indexOf(this), QString::fromStdString(plugin->ident()));
+
+   foreach (QWidget *widget, widgets)
+   {
+      options->removeWidget(widget);
+      delete widget;
+   }
+   widgets.clear();
+
+   auto list = plugin->options();
+   for (auto itr = list.begin(); itr != list.end(); ++itr)
+   {
+      QWidget *widget = new PluginSetting(plugin, *itr, this);
+      options->addWidget(widget);
+      widgets.append(widget);
+   }
 }
 
 PluginSetting::PluginSetting(std::shared_ptr<Plugin> &plug,

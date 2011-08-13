@@ -10,6 +10,8 @@
 #include <QTabWidget>
 #include <QLabel>
 #include <QSlider>
+#include <QLineEdit>
+#include <QVBoxLayout>
 
 namespace Global
 {
@@ -51,9 +53,18 @@ class PluginSettings : public QWidget
 
    private slots:
       void enable(int);
+      void open();
+      void remove();
       
    private:
       std::shared_ptr<Plugin> &plugin;
+      QLineEdit *path;
+
+      QVBoxLayout *options;
+      QList<QWidget*> widgets;
+      QTabWidget *tab_widget;
+
+      void update_controls();
 };
 
 class ThreadWindowImpl : public QWidget
@@ -66,6 +77,7 @@ class ThreadWindowImpl : public QWidget
    private:
       std::shared_ptr<Plugin> *plugins;
       QTabWidget *tab;
+      friend class PluginSettings;
 };
 
 class MetaApplication

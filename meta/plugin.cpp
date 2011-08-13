@@ -1,7 +1,22 @@
 #include "plugin.hpp"
 
+namespace Global
+{
+   static ssnes_dsp_info_t info;
+
+   void set_dsp_info(const ssnes_dsp_info_t &info_)
+   {
+      info = info;
+   }
+
+   const ssnes_dsp_info_t& get_dsp_info()
+   {
+      return info;
+   }
+}
+
 Plugin::Plugin(const ssnes_dsp_info_t *info, const char *lib) : 
-   plug(NULL), plug_handle(NULL), is_enabled(true)
+   plug(NULL), plug_handle(NULL), is_enabled(true), plug_path(lib)
 {
    if (!lib)
       return;
@@ -54,6 +69,11 @@ std::string Plugin::ident() const
       return plug->ident ? plug->ident : "Unknown";
    else
       return "None";
+}
+
+const std::string& Plugin::path() const
+{
+   return plug_path;
 }
 
 Plugin::~Plugin()

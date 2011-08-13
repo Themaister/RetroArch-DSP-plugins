@@ -5,6 +5,7 @@
 MetaDSP::MetaDSP(float input_rate, float output_rate) : sample_rate(input_rate)
 {
    ssnes_dsp_info_t info = { sample_rate, sample_rate };
+   Global::set_dsp_info(info);
    CIniReader cfg("ssnes_effect.cfg");
    auto plug0 = cfg.ReadString("meta", "plugin0", "");
    auto plug1 = cfg.ReadString("meta", "plugin1", "");

@@ -8,6 +8,12 @@
 #include <list>
 #include "../abstract_plugin.hpp"
 
+namespace Global
+{
+   void set_dsp_info(const ssnes_dsp_info_t &info);
+   const ssnes_dsp_info_t& get_dsp_info();
+}
+
 class Plugin
 {
    public:
@@ -21,6 +27,7 @@ class Plugin
       void process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in);
       void show();
       std::string ident() const;
+      const std::string& path() const;
 
       void enabled(bool enable = true);
 
@@ -36,6 +43,7 @@ class Plugin
       typedef const ssnes_dsp_plugin_t* (*plug_init_t)(void);
 
       bool is_enabled;
+      std::string plug_path;
 };
 
 #endif
