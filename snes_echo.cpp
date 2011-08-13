@@ -12,26 +12,27 @@ struct PlugEcho : public AbstractPlugin
    Echo echo_r;
    float buf[4096];
 
-   PlugEcho(int delay_, int amp_) : amp(amp_), delay(delay_)
+   PlugEcho(int delay, int amp)
    {
       PluginOption opt = {0};
+      opt.type = PluginOption::Type::Double;
 
       opt.id = ECHO;
       opt.description = "Delay";
-      opt.min = 1.0;
-      opt.max = 1000.0;
-      opt.current = delay;
+      opt.d.min = 1.0;
+      opt.d.max = 1000.0;
+      opt.d.current = delay;
       dsp_options.push_back(opt);
 
       opt.id = AMP;
       opt.description = "Amplification";
-      opt.min = 0.0;
-      opt.max = 256.0;
-      opt.current = amp;
+      opt.d.min = 0.0;
+      opt.d.max = 256.0;
+      opt.d.current = amp;
       dsp_options.push_back(opt);
    }
 
-   void set_option(PluginOption::ID id, double val)
+   void set_option_double(PluginOption::ID id, double val)
    {
       switch (id)
       {
@@ -48,9 +49,6 @@ struct PlugEcho : public AbstractPlugin
    }
 
    enum IDs : PluginOption::ID { ECHO, AMP };
-
-   int amp;
-   int delay;
 };
 
 static void* dsp_init(const ssnes_dsp_info_t *info)
@@ -67,9 +65,6 @@ static void* dsp_init(const ssnes_dsp_info_t *info)
    echo->echo_r.SetSampleRate(info->input_rate);
    echo->echo_r.SetAmp(amp);
    echo->echo_r.SetDelay(delay);
-
-   echo->amp = amp;
-   echo->delay = delay;
 
    return echo;
 }

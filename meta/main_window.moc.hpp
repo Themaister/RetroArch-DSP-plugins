@@ -19,12 +19,12 @@ namespace Global
    void unlock();
 }
 
-class PluginSetting : public QWidget
+class PluginSettingDouble : public QWidget
 {
    Q_OBJECT
 
    public:
-      PluginSetting(std::shared_ptr<Plugin> &plug, const PluginOption &opt, QWidget *parent = 0);
+      PluginSettingDouble(std::shared_ptr<Plugin> &plug, const PluginOption &opt, QWidget *parent = 0);
 
    private slots:
       void updated();
@@ -42,6 +42,21 @@ class PluginSetting : public QWidget
 
       QLabel *value;
       QSlider *slider;
+};
+
+class PluginSettingInteger : public QWidget
+{
+   Q_OBJECT
+
+   public:
+      PluginSettingInteger(std::shared_ptr<Plugin> &plug, const PluginOption &opt, QWidget *parent = 0);
+
+   private slots:
+      void updated(int);
+
+   private:
+      PluginOption::ID id;
+      std::shared_ptr<Plugin> &plugin;
 };
 
 class PluginSettings : public QWidget

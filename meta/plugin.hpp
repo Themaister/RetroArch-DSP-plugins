@@ -33,7 +33,9 @@ class Plugin
 
       bool is_resampler() const;
       const std::list<PluginOption>& options() const;
-      void set_option(PluginOption::ID id, double value);
+      void set_option_double(PluginOption::ID id, double value);
+      void set_option_int(PluginOption::ID id, int value);
+      //void set_option_selection(PluginOption::ID id, PluginOption::ID sel);
 
    private:
       Library library;

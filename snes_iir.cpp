@@ -14,6 +14,7 @@ struct PlugIIR : public AbstractPlugin
 
    PlugIIR(float freq, float gain)
    {
+      /*
       PluginOption opt = {0};
 
       opt.id = FREQ;
@@ -29,6 +30,7 @@ struct PlugIIR : public AbstractPlugin
       opt.max = 20;
       opt.current = gain;
       dsp_options.push_back(opt);
+      */
    }
 
    void set_option(PluginOption::ID id, double val)

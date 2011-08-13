@@ -1,4 +1,4 @@
-TARGETS = snes_reverb.dll snes_wah.dll snes_phaser.dll snes_iir.dll snes_echo.dll snes_meta.dll
+TARGETS = snes_reverb.dll snes_wah.dll snes_phaser.dll snes_iir.dll snes_echo.dll snes_volume.dll
 
 CXXFLAGS += -O3 -g -Wall -pedantic -std=gnu++0x
 CXX = g++
@@ -14,6 +14,7 @@ SNES_PHASER_OBJ = snes_phaser.o phaser.o $(INIREAD_OBJ)
 SNES_IIR_OBJ = snes_iir.o iirfilters.o $(INIREAD_OBJ)
 SNES_ECHO_OBJ = snes_echo.o echo.o $(INIREAD_OBJ)
 SNES_META_OBJ = meta/meta.o meta/plugin.o meta/snes_meta.o $(INIREAD_OBJ)
+SNES_VOLUME_OBJ = snes_volume.o
 
 LDFLAGS += -shared -Wl,--no-undefined -static-libgcc -static-libstdc++
 
@@ -32,8 +33,8 @@ snes_iir.dll: $(SNES_IIR_OBJ)
 snes_echo.dll: $(SNES_ECHO_OBJ)
 	$(CXX) -o $@ $(SNES_ECHO_OBJ) $(LDFLAGS)
 
-snes_meta.dll: $(SNES_META_OBJ)
-	$(CXX) -o $@ $(SNES_META_OBJ) $(LDFLAGS)
+snes_volume.dll: $(SNES_VOLUME_OBJ)
+	$(CXX) -o $@ $(SNES_VOLUME_OBJ) $(LDFLAGS)
 
 %.o: %.cpp $(HEADERS)
 	$(CXX) -c -o $@ $< $(CXXFLAGS)

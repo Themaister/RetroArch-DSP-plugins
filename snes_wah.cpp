@@ -14,11 +14,13 @@ struct PlugWah : public AbstractPlugin
 
    PlugWah(float freq, float startphase, float res, float depth, float freqofs)
    {
+      /*
       dsp_options.push_back({FREQ, "LFO frequency", 0.1, 10.0, freq});
       dsp_options.push_back({STARTPHASE, "LFO start phase", 0.0, 360.0, startphase});
       dsp_options.push_back({RES, "LFO resonance", 0.0, 10.0, res});
       dsp_options.push_back({DEPTH, "LFO depth", 0.0, 10.0, depth});
       dsp_options.push_back({FREQOFS, "LFO frequency offset", 0.1, 10.0, freqofs});
+      */
    }
 
    void set_option(PluginOption::ID id, double val)

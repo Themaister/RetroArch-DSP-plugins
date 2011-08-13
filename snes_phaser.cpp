@@ -15,6 +15,7 @@ struct PlugPhaser : public AbstractPlugin
 
    PlugPhaser(float freq, float startphase, float fb, int depth, int stages, int drywet)
    {
+      /*
       PluginOption opt = {0};
 
       opt.id = LFO_FREQ;
@@ -58,6 +59,7 @@ struct PlugPhaser : public AbstractPlugin
       opt.max = 256;
       opt.current = drywet;
       dsp_options.push_back(opt);
+      */
    }
 
    void set_option(PluginOption::ID id, double val)

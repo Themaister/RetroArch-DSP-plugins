@@ -1,4 +1,4 @@
-TARGETS = snes_reverb.so snes_wah.so snes_phaser.so snes_iir.so snes_echo.so
+TARGETS = snes_reverb.so snes_wah.so snes_phaser.so snes_iir.so snes_echo.so snes_volume.so
 
 CXXFLAGS += -O3 -g -fPIC -Wall -pedantic -std=gnu++0x
 
@@ -12,6 +12,7 @@ SNES_WAH_OBJ = snes_wah.o wahwah.o $(INIREAD_OBJ)
 SNES_PHASER_OBJ = snes_phaser.o phaser.o $(INIREAD_OBJ)
 SNES_IIR_OBJ = snes_iir.o iirfilters.o $(INIREAD_OBJ)
 SNES_ECHO_OBJ = snes_echo.o echo.o $(INIREAD_OBJ)
+SNES_VOLUME_OBJ = snes_volume.o
 
 LDFLAGS += -shared -Wl,--no-undefined
 
@@ -29,6 +30,9 @@ snes_iir.so: $(SNES_IIR_OBJ)
 
 snes_echo.so: $(SNES_ECHO_OBJ)
 	$(CXX) -o $@ $(SNES_ECHO_OBJ) $(LDFLAGS)
+
+snes_volume.so: $(SNES_VOLUME_OBJ)
+	$(CXX) -o $@ $(SNES_VOLUME_OBJ) $(LDFLAGS)
 
 %.o: %.cpp $(HEADERS)
 	$(CXX) -c -o $@ $< $(CXXFLAGS)

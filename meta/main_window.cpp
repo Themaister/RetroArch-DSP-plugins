@@ -78,13 +78,8 @@ PluginSettings::PluginSettings(std::shared_ptr<Plugin> &plug, QWidget *parent)
    vbox->addLayout(hbox);
 
    options = new QVBoxLayout;
-   auto list = plugin->options();
-   for (auto itr = list.begin(); itr != list.end(); ++itr)
-   {
-      QWidget *widget = new PluginSetting(plugin, *itr, this);
-      widgets.append(widget);
-      options->addWidget(widget);
-   }
+
+   update_controls();
 
    vbox->addLayout(options);
 
@@ -153,20 +148,38 @@ void PluginSettings::update_controls()
    auto list = plugin->options();
    for (auto itr = list.begin(); itr != list.end(); ++itr)
    {
-      QWidget *widget = new PluginSetting(plugin, *itr, this);
+      QWidget *widget;
+      switch (itr->type)
+      {
+         case PluginOption::Type::Double:
+            widget = new PluginSettingDouble(plugin, *itr, this);
+            break;
+
+         case PluginOption::Type::Integer:
+            widget = new PluginSettingInteger(plugin, *itr, this);
+            break;
+
+         //case PluginOptions::Type::Selection:
+         //   widget = new PluginSettingSelection(plugin, *itr, this);
+         //   break;
+
+         default:
+            widget = 0;
+      }
+
       options->addWidget(widget);
       widgets.append(widget);
    }
 }
 
-PluginSetting::PluginSetting(std::shared_ptr<Plugin> &plug,
+PluginSettingDouble::PluginSettingDouble(std::shared_ptr<Plugin> &plug,
       const PluginOption &opt, QWidget *parent)
    : QWidget(parent), plugin(plug)
 {
    id = opt.id;
-   min = opt.min;
-   max = opt.max;
-   current = opt.current;
+   min = opt.d.min;
+   max = opt.d.max;
+   current = opt.d.current;
 
    QHBoxLayout *hbox = new QHBoxLayout;
    hbox->addWidget(new QLabel(QString::fromStdString(opt.description), this));
@@ -183,26 +196,58 @@ PluginSetting::PluginSetting(std::shared_ptr<Plugin> &plug,
    setLayout(hbox);
 }
 
-void PluginSetting::updated()
+void PluginSettingDouble::updated()
 {
    current = slide2val();
    value->setText(QString::number(current, 'f', 1));
 
    Global::lock();
-   plugin->set_option(id, current);
+   plugin->set_option_double(id, current);
    Global::unlock();
 }
 
-double PluginSetting::slide2val() const
+double PluginSettingDouble::slide2val() const
 {
    int pos = slider->value();
    return min + (max - min) * pos / Intervals;
 }
 
-void PluginSetting::val2slide(double val)
+void PluginSettingDouble::val2slide(double val)
 {
    int value = (val - min) * Intervals / (max - min);
    slider->setValue(value);
+}
+
+PluginSettingInteger::PluginSettingInteger(std::shared_ptr<Plugin> &plug,
+      const PluginOption &opt, QWidget *parent)
+   : QWidget(parent), plugin(plug)
+{
+   id = opt.id;
+
+   QHBoxLayout *hbox = new QHBoxLayout;
+   hbox->addWidget(new QLabel(QString::fromStdString(opt.description), this));
+
+   QSlider *slider = new QSlider(Qt::Horizontal, this);
+   slider->setMinimum(opt.i.min);
+   slider->setMaximum(opt.i.max);
+   slider->setValue(opt.i.current);
+   connect(slider, SIGNAL(valueChanged(int)), this, SLOT(updated(int)));
+
+   QLabel *value = new QLabel(this);
+   value->setNum(opt.i.current);
+   connect(slider, SIGNAL(valueChanged(int)), value, SLOT(setNum(int)));
+
+   hbox->addWidget(slider);
+   hbox->addWidget(value);
+
+   setLayout(hbox);
+}
+
+void PluginSettingInteger::updated(int value)
+{
+   Global::lock();
+   plugin->set_option_int(id, value);
+   Global::unlock();
 }
 
 

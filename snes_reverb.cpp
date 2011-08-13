@@ -16,44 +16,45 @@ struct PlugReverb : public AbstractPlugin
          float roomwidth, float roomsize)
    {
       PluginOption opt = {0};
+      opt.type = PluginOption::Type::Double;
 
       opt.id = DRYTIME;
       opt.description = "Dry time";
-      opt.min = 0.01;
-      opt.max = 2.0;
-      opt.current = drytime;
+      opt.d.min = 0.01;
+      opt.d.max = 2.0;
+      opt.d.current = drytime;
       dsp_options.push_back(opt);
 
       opt.id = WETTIME;
       opt.description = "Wet time";
-      opt.min = 0.01;
-      opt.max = 2.0;
-      opt.current = wettime;
+      opt.d.min = 0.01;
+      opt.d.max = 2.0;
+      opt.d.current = wettime;
       dsp_options.push_back(opt);
 
       opt.id = DAMPING;
       opt.description = "Damping";
-      opt.min = 0.01;
-      opt.max = 2.0;
-      opt.current = damping;
+      opt.d.min = 0.01;
+      opt.d.max = 2.0;
+      opt.d.current = damping;
       dsp_options.push_back(opt);
 
       opt.id = ROOMWIDTH;
       opt.description = "Room width";
-      opt.min = 0.01;
-      opt.max = 2.0;
-      opt.current = roomwidth;
+      opt.d.min = 0.01;
+      opt.d.max = 2.0;
+      opt.d.current = roomwidth;
       dsp_options.push_back(opt);
 
       opt.id = ROOMSIZE;
       opt.description = "Room size";
-      opt.min = 0.01;
-      opt.max = 2.0;
-      opt.current = roomsize;
+      opt.d.min = 0.01;
+      opt.d.max = 2.0;
+      opt.d.current = roomsize;
       dsp_options.push_back(opt);
    }
 
-   void set_option(PluginOption::ID id, double val)
+   void set_option_double(PluginOption::ID id, double val)
    {
       switch (id)
       {
