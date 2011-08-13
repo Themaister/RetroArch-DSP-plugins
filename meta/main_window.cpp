@@ -125,6 +125,7 @@ void PluginSetting::val2slide(double val)
 
 namespace Global
 {
+#ifdef META_THREADED
    static QMutex g_lock;
 
    void lock()
@@ -136,4 +137,8 @@ namespace Global
    {
       g_lock.unlock();
    }
+#else
+   void lock() {}
+   void unlock() {}
+#endif
 }
