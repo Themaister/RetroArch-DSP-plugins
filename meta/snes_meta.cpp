@@ -23,13 +23,19 @@ static void *dsp_init(const ssnes_dsp_info_t *info)
    return new MetaDSP(info->input_rate, info->output_rate);
 }
 
+static void dsp_events(void *handle)
+{
+   reinterpret_cast<MetaDSP*>(handle)->events();
+}
+
 const ssnes_dsp_plugin_t dsp_plug = {
    dsp_init,
    dsp_process,
    dsp_free,
    SSNES_DSP_API_VERSION,
    dsp_config,
-   "DSP Chain"
+   "DSP Chain",
+   dsp_events,
 };
 
 SSNES_API_EXPORT const ssnes_dsp_plugin_t * SSNES_API_CALLTYPE

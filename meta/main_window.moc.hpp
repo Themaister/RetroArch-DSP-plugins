@@ -22,20 +22,17 @@ class ThreadWindowImpl : public QWidget
       std::shared_ptr<Plugin> *plugins;
 };
 
-class MetaApplication : public QThread
+class MetaApplication
 {
-   Q_OBJECT
-
    public:
       MetaApplication(std::shared_ptr<Plugin> *plugs);
-
-      void run();
+      ~MetaApplication();
       void show();
 
    private:
       ThreadWindowImpl *impl;
       std::shared_ptr<Plugin> *plugins;
-      bool alive;
+      QApplication *app;
 };
 
 #endif

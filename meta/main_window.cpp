@@ -30,32 +30,24 @@ void ThreadWindowImpl::update_plugs()
 
 void MetaApplication::show()
 {
-   if (alive)
-   {
-      std::cerr << "Trying to show!" << std::endl;
-      QTimer::singleShot(0, impl, SLOT(show()));
-   }
+   impl->show();
 }
 
 MetaApplication::MetaApplication(std::shared_ptr<Plugin> *plugs)
-   : QThread(0), plugins(plugs), alive(false)
+   : plugins(plugs)
 {
-   start();
+   static int argc = 1;
+   static const char *appname = strdup("ssnes-dsp");
+   static char *argv[] = { const_cast<char*>(appname), NULL };
+
+   app = new QApplication(argc, argv);
+   impl = new ThreadWindowImpl;
+   impl->plugs(plugins);
 }
 
-void MetaApplication::run()
+MetaApplication::~MetaApplication()
 {
-   int argc = 1;
-   char *appname = strdup("ssnes-dsp");
-   char *argv[] = { appname, NULL };
-
-   QApplication app(argc, argv);
-   impl = new ThreadWindowImpl;
-   alive = true;
-   impl->plugs(plugins);
-   impl->show();
-   app.exec();
    delete impl;
-   free(appname);
+   delete app;
 }
 

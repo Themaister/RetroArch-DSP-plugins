@@ -21,11 +21,13 @@ class ThreadWindow
          app->show();
       }
 
+      void events()
+      {
+         QApplication::processEvents();
+      }
+
       ~ThreadWindow()
       {
-         qApp->quit();
-         app->exit();
-         app->wait();
          delete app;
       }
 

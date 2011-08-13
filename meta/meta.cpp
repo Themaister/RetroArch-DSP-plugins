@@ -59,6 +59,13 @@ void MetaDSP::show()
 #endif
 }
 
+void MetaDSP::events()
+{
+#ifdef META_GUI
+   window.events();
+#endif
+}
+
 // Process the chain.
 void MetaDSP::process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in)
 {

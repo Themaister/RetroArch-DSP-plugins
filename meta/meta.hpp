@@ -17,6 +17,7 @@ class MetaDSP
    public:
       MetaDSP(float input_rate, float output_rate);
       void show();
+      void events();
       // One process that does it all.
       void process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in);
 
