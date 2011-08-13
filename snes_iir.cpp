@@ -11,6 +11,43 @@ struct PlugIIR : public AbstractPlugin
    IIRFilter iir_l;
    IIRFilter iir_r;
    float buf[4096];
+
+   PlugIIR(float freq, float gain)
+   {
+      PluginOption opt = {0};
+
+      opt.id = FREQ;
+      opt.description = "Frequency";
+      opt.min = 50;
+      opt.max = 16000;
+      opt.current = freq;
+      dsp_options.push_back(opt);
+
+      opt.id = GAIN;
+      opt.description = "Gain";
+      opt.min = -20;
+      opt.max = 20;
+      opt.current = gain;
+      dsp_options.push_back(opt);
+   }
+
+   void set_option(PluginOption::ID id, double val)
+   {
+      switch (id)
+      {
+         case FREQ:
+            iir_l.setFrequency(val);
+            iir_r.setFrequency(val);
+            break;
+
+         case GAIN:
+            iir_l.setGain(val);
+            iir_r.setGain(val);
+            break;
+      }
+   }
+
+   enum IDs : PluginOption::ID { FREQ, GAIN };
 };
 
 static void* dsp_init(const ssnes_dsp_info_t *info)
@@ -20,7 +57,7 @@ static void* dsp_init(const ssnes_dsp_info_t *info)
    float freq = iniReader.ReadFloat("iir","filter_frequency",1024.0);
    int gain = iniReader.ReadInteger("iir","filter_gain",5);
 
-   PlugIIR *iir = new PlugIIR;
+   PlugIIR *iir = new PlugIIR(freq, gain);
    iir->iir_l.init(info->input_rate,type);
    iir->iir_l.setFrequency(freq);
    iir->iir_l.setQuality(0.707);

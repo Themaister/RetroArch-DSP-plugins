@@ -12,6 +12,92 @@ struct PlugPhaser : public AbstractPlugin
    Phaser phase_l;
    Phaser phase_r;
    float buf[4096];
+
+   PlugPhaser(float freq, float startphase, float fb, int depth, int stages, int drywet)
+   {
+      PluginOption opt = {0};
+
+      opt.id = LFO_FREQ;
+      opt.description = "LFO frequency";
+      opt.min = 0.05;
+      opt.max = 5.0;
+      opt.current = freq;
+      dsp_options.push_back(opt);
+
+      opt.id = STARTPHASE;
+      opt.description = "LFO start phase";
+      opt.min = 0;
+      opt.max = 256;
+      opt.current = startphase;
+      dsp_options.push_back(opt);
+
+      opt.id = LFO_FB;
+      opt.description = "LFO feedback";
+      opt.min = 0;
+      opt.max = 1;
+      opt.current = fb;
+      dsp_options.push_back(opt);
+
+      opt.id = DEPTH;
+      opt.description = "LFO depth";
+      opt.min = 0;
+      opt.max = 200;
+      opt.current = depth;
+      dsp_options.push_back(opt);
+
+      opt.id = STAGES;
+      opt.description = "LFO stage amount";
+      opt.min = 0;
+      opt.max = 10;
+      opt.current = stages;
+      dsp_options.push_back(opt);
+
+      opt.id = DRYWET;
+      opt.description = "LFO dry/wet ratio";
+      opt.min = 0;
+      opt.max = 256;
+      opt.current = drywet;
+      dsp_options.push_back(opt);
+   }
+
+   void set_option(PluginOption::ID id, double val)
+   {
+      switch (id)
+      {
+         case LFO_FREQ:
+            phase_l.SetLFOFreq(val);
+            phase_r.SetLFOFreq(val);
+            break;
+
+         case STARTPHASE:
+            phase_l.SetLFOStartPhase(val);
+            phase_r.SetLFOStartPhase(val);
+            break;
+
+         case LFO_FB:
+            phase_l.SetFeedback(val);
+            phase_r.SetFeedback(val);
+            break;
+
+         case DEPTH:
+            phase_l.SetDepth(val);
+            phase_r.SetDepth(val);
+            break;
+
+         case STAGES:
+            phase_l.SetStages(val);
+            phase_r.SetStages(val);
+            break;
+
+         case DRYWET:
+            phase_l.SetDryWet(val);
+            phase_r.SetDryWet(val);
+            break;
+      }
+   }
+
+   enum IDs : PluginOption::ID { LFO_FREQ, STARTPHASE, LFO_FB,
+      DEPTH, STAGES, DRYWET };
 };
 
 static void* dsp_init(const ssnes_dsp_info_t *info)
@@ -24,7 +110,7 @@ static void* dsp_init(const ssnes_dsp_info_t *info)
    int stages = iniReader.ReadInteger("phaser","lfo_stage_amount",2);
    int drywet = iniReader.ReadInteger("phaser","lfo_dry_wet_ratio",128);
 
-   PlugPhaser *phaser = new PlugPhaser;
+   PlugPhaser *phaser = new PlugPhaser(freq, startphase, fb, depth, stages, drywet);
    phaser->phase_l.SetLFOFreq(freq);
    phaser->phase_l.SetLFOStartPhase(startphase);
    phaser->phase_l.SetFeedback(fb);

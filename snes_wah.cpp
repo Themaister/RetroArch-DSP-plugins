@@ -11,6 +11,48 @@ struct PlugWah : public AbstractPlugin
    WahWah wah_l;
    WahWah wah_r;
    float buf[4096];
+
+   PlugWah(float freq, float startphase, float res, float depth, float freqofs)
+   {
+      dsp_options.push_back({FREQ, "LFO frequency", 0.1, 10.0, freq});
+      dsp_options.push_back({STARTPHASE, "LFO start phase", 0.0, 360.0, startphase});
+      dsp_options.push_back({RES, "LFO resonance", 0.0, 10.0, res});
+      dsp_options.push_back({DEPTH, "LFO depth", 0.0, 10.0, depth});
+      dsp_options.push_back({FREQOFS, "LFO frequency offset", 0.1, 10.0, freqofs});
+   }
+
+   void set_option(PluginOption::ID id, double val)
+   {
+      switch (id)
+      {
+         case FREQ:
+            wah_l.SetLFOFreq(val);
+            wah_r.SetLFOFreq(val);
+            break;
+
+         case STARTPHASE:
+            wah_l.SetLFOStartPhase(val);
+            wah_r.SetLFOStartPhase(val);
+            break;
+
+         case RES:
+            wah_l.SetResonance(val);
+            wah_r.SetResonance(val);
+            break;
+
+         case DEPTH:
+            wah_l.SetDepth(val);
+            wah_r.SetDepth(val);
+            break;
+
+         case FREQOFS:
+            wah_l.SetFreqOffset(val);
+            wah_r.SetFreqOffset(val);
+            break;
+      }
+   }
+
+   enum IDs : PluginOption::ID { FREQ, STARTPHASE, RES, DEPTH, FREQOFS };
 };
 
 static void* dsp_init(const ssnes_dsp_info_t *info)
@@ -22,7 +64,7 @@ static void* dsp_init(const ssnes_dsp_info_t *info)
    float depth = iniReader.ReadInteger("wah","lfo_depth",0.70);
    float freqofs = iniReader.ReadInteger("wah","lfo_frequency_offset",0.30);
 
-   PlugWah *wah = new PlugWah;
+   PlugWah *wah = new PlugWah(freq, startphase, res, depth, freqofs);
    wah->wah_l.SetDepth(depth);
    wah->wah_l.SetFreqOffset(freqofs);
    wah->wah_l.SetLFOFreq(freq);
