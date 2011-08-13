@@ -11,6 +11,80 @@ struct PlugReverb : public AbstractPlugin
    revmodel rev_l;
    revmodel rev_r;
    float buf[4096];
+
+   PlugReverb(float drytime, float wettime, float damping,
+         float roomwidth, float roomsize)
+   {
+      PluginOption opt = {0};
+
+      opt.id = DRYTIME;
+      opt.description = "Dry time";
+      opt.min = 0.01;
+      opt.max = 2.0;
+      opt.current = drytime;
+      dsp_options.push_back(opt);
+
+      opt.id = WETTIME;
+      opt.description = "Wet time";
+      opt.min = 0.01;
+      opt.max = 2.0;
+      opt.current = wettime;
+      dsp_options.push_back(opt);
+
+      opt.id = DAMPING;
+      opt.description = "Damping";
+      opt.min = 0.01;
+      opt.max = 2.0;
+      opt.current = damping;
+      dsp_options.push_back(opt);
+
+      opt.id = ROOMWIDTH;
+      opt.description = "Room width";
+      opt.min = 0.01;
+      opt.max = 2.0;
+      opt.current = roomwidth;
+      dsp_options.push_back(opt);
+
+      opt.id = ROOMSIZE;
+      opt.description = "Room size";
+      opt.min = 0.01;
+      opt.max = 2.0;
+      opt.current = roomsize;
+      dsp_options.push_back(opt);
+   }
+
+   void set_option(PluginOption::ID id, double val)
+   {
+      switch (id)
+      {
+         case DRYTIME:
+            rev_l.setdry(val);
+            rev_r.setdry(val);
+            break;
+
+         case WETTIME:
+            rev_l.setwet(val);
+            rev_r.setwet(val);
+            break;
+
+         case DAMPING:
+            rev_l.setdamp(val);
+            rev_r.setdamp(val);
+            break;
+
+         case ROOMWIDTH:
+            rev_l.setwidth(val);
+            rev_r.setwidth(val);
+            break;
+
+         case ROOMSIZE:
+            rev_l.setroomsize(val);
+            rev_r.setroomsize(val);
+            break;
+      }
+   }
+
+   enum IDs : PluginOption::ID { DRYTIME, WETTIME, DAMPING, ROOMWIDTH, ROOMSIZE };
 };
 
 static void* dsp_init(const ssnes_dsp_info_t *)
@@ -22,7 +96,7 @@ static void* dsp_init(const ssnes_dsp_info_t *)
    float roomwidth = iniReader.ReadFloat("reverb","room_width",0.56);
    float roomsize = iniReader.ReadFloat("reverb","room_size",0.56);
 
-   PlugReverb *rev = new PlugReverb;
+   PlugReverb *rev = new PlugReverb(drytime, wettime, damping, roomwidth, roomsize);
    rev->rev_l.setdamp(damping);
    rev->rev_l.setdry(drytime);
    rev->rev_l.setwet(wettime);
