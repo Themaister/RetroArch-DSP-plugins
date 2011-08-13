@@ -12,6 +12,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QDir>
+#include <QVariant>
 
 ThreadWindowImpl::ThreadWindowImpl(std::shared_ptr<Plugin> *plugs, QWidget *parent)
    : QWidget(parent), plugins(plugs)
@@ -159,9 +160,9 @@ void PluginSettings::update_controls()
             widget = new PluginSettingInteger(plugin, *itr, this);
             break;
 
-         //case PluginOptions::Type::Selection:
-         //   widget = new PluginSettingSelection(plugin, *itr, this);
-         //   break;
+         case PluginOption::Type::Selection:
+            widget = new PluginSettingSelection(plugin, *itr, this);
+            break;
 
          default:
             widget = 0;
@@ -247,6 +248,37 @@ void PluginSettingInteger::updated(int value)
 {
    Global::lock();
    plugin->set_option_int(id, value);
+   Global::unlock();
+}
+
+PluginSettingSelection::PluginSettingSelection(std::shared_ptr<Plugin> &plug,
+      const PluginOption &opt, QWidget *parent)
+   : QWidget(parent), plugin(plug)
+{
+   id = opt.id;
+   QHBoxLayout *hbox = new QHBoxLayout;
+   hbox->addWidget(new QLabel(QString::fromStdString(opt.description), this));
+
+   combo = new QComboBox(this);
+   
+   for (auto itr = opt.s.selection.begin(); itr != opt.s.selection.end(); ++itr)
+      combo->addItem(QString::fromStdString(itr->description), QVariant::fromValue(itr->id));
+
+   int index = combo->findData(QVariant::fromValue(opt.s.current));
+   if (index >= 0)
+      combo->setCurrentIndex(index);
+
+   connect(combo, SIGNAL(currentIndexChanged(int)), this, SLOT(indexChanged(int)));
+   hbox->addWidget(combo);
+
+   setLayout(hbox);
+}
+
+void PluginSettingSelection::indexChanged(int index)
+{
+   PluginOption::ID optid = combo->itemData(index).value<PluginOption::ID>();
+   Global::lock();
+   plugin->set_option_selection(id, optid);
    Global::unlock();
 }
 

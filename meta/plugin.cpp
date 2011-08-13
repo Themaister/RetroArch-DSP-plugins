@@ -113,3 +113,9 @@ void Plugin::set_option_int(PluginOption::ID id, int value)
       reinterpret_cast<AbstractPlugin*>(plug_handle)->set_option_int(id, value);
 }
 
+void Plugin::set_option_selection(PluginOption::ID id, PluginOption::ID sel)
+{
+   if (plug_handle)
+      reinterpret_cast<AbstractPlugin*>(plug_handle)->set_option_selection(id, sel);
+}
+

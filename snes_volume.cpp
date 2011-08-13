@@ -31,6 +31,7 @@ struct PlugVolume : public AbstractPlugin
    }
 
    enum IDs : PluginOption::ID { VOLUME, PAN };
+   enum SelIDs : PluginOption::ID { FOO1, FOO2, FOO3 };
 
    void set_option_double(PluginOption::ID id, double val)
    {

@@ -12,6 +12,7 @@
 #include <QSlider>
 #include <QLineEdit>
 #include <QVBoxLayout>
+#include <QComboBox>
 
 namespace Global
 {
@@ -56,6 +57,22 @@ class PluginSettingInteger : public QWidget
 
    private:
       PluginOption::ID id;
+      std::shared_ptr<Plugin> &plugin;
+};
+
+class PluginSettingSelection : public QWidget
+{
+   Q_OBJECT
+
+   public:
+      PluginSettingSelection(std::shared_ptr<Plugin> &plug, const PluginOption &opt, QWidget *parent = 0);
+
+   private slots:
+      void indexChanged(int);
+
+   private:
+      PluginOption::ID id;
+      QComboBox *combo;
       std::shared_ptr<Plugin> &plugin;
 };
 
