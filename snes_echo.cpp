@@ -37,11 +37,13 @@ struct PlugEcho : public AbstractPlugin
       switch (id)
       {
          case ECHO:
+            std::cerr << "Setting delay: " << val << std::endl;
             echo_l.SetDelay(val);
             echo_r.SetDelay(val);
             break;
 
          case AMP:
+            std::cerr << "Setting amp: " << val << std::endl;
             echo_l.SetAmp(val);
             echo_r.SetAmp(val);
             break;

@@ -65,6 +65,7 @@ void Echo::SetSampleRate( int rate )
 {
 	if ( this->rate != rate )
 	{
+      std::cerr << "Sample rate = " << rate << std::endl;
 		this->rate = rate;
 		SetDelay( ms );
 	}

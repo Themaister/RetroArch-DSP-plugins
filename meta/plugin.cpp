@@ -6,7 +6,7 @@ namespace Global
 
    void set_dsp_info(const ssnes_dsp_info_t &info_)
    {
-      info = info;
+      info = info_;
    }
 
    const ssnes_dsp_info_t& get_dsp_info()
