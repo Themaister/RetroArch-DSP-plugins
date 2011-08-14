@@ -41,19 +41,19 @@ struct PlugWah : public AbstractPlugin
       opt.id = DEPTH;
       opt.description = "LFO depth";
       opt.d.min = 0.0;
-      opt.d.max = 10.0;
+      opt.d.max = 1.0;
       opt.d.current = depth;
       dsp_options.push_back(opt);
 
       opt.id = FREQOFS;
       opt.description = "LFO frequency offset";
-      opt.d.min = 0.1;
-      opt.d.max = 10.0;
+      opt.d.min = 0.0;
+      opt.d.max = 0.95;
       opt.d.current = freqofs;
       dsp_options.push_back(opt);
    }
 
-   void set_option(PluginOption::ID id, double val)
+   void set_option_double(PluginOption::ID id, double val)
    {
       switch (id)
       {
@@ -93,8 +93,8 @@ static void* dsp_init(const ssnes_dsp_info_t *info)
    float freq = iniReader.ReadFloat("wah", "lfo_frequency",1.5); 
    float startphase = iniReader.ReadFloat("wah","lfo_start_phase",0.0);
    float res = iniReader.ReadFloat("wah","lfo_resonance",2.5);
-   float depth = iniReader.ReadInteger("wah","lfo_depth",0.70);
-   float freqofs = iniReader.ReadInteger("wah","lfo_frequency_offset",0.30);
+   float depth = iniReader.ReadFloat("wah","lfo_depth",0.70);
+   float freqofs = iniReader.ReadFloat("wah","lfo_frequency_offset",0.30);
 
    PlugWah *wah = new PlugWah(freq, startphase, res, depth, freqofs);
    wah->wah_l.SetDepth(depth);
