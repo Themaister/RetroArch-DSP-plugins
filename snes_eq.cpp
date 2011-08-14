@@ -5,10 +5,19 @@
 #include "eq.h"
 #include <stdlib.h>
 
+#ifdef PERF_TEST
+#include <time.h>
+#endif
+
 struct PlugEQ : public AbstractPlugin
 {
    PlugEQ(float rate) : AbstractPlugin()
    {
+#ifdef PERF_TEST
+      process_frames = 0;
+      process_time = 0.0;
+#endif
+
       plug_layout = AbstractPlugin::Layout::Horizontal;
 
       const float bands[] = { 100, 400, 800, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 9000, 10000, 12000 };
@@ -69,11 +78,23 @@ struct PlugEQ : public AbstractPlugin
 
    void process(const float *in, unsigned frames)
    {
+#ifdef PERF_TEST
+      struct timespec tv_old;
+      struct timespec tv_new;
+      clock_gettime(CLOCK_MONOTONIC, &tv_old);
+#endif
       for (unsigned i = 0; i < frames; i++)
       {
          buf[(i << 1) + 0] = dsp_eq_process(eq_l, in[(i << 1) + 0]);
          buf[(i << 1) + 1] = dsp_eq_process(eq_r, in[(i << 1) + 1]);
       }
+#ifdef PERF_TEST
+      clock_gettime(CLOCK_MONOTONIC, &tv_new);
+      double time = (double)(tv_new.tv_sec - tv_old.tv_sec) + (tv_new.tv_nsec - tv_old.tv_nsec) / 1000000000.0;
+      process_time += time;
+      process_frames += frames;
+      fprintf(stderr, "[Equalizer]: Processing @ %10.0f frames/s.\n", static_cast<float>(process_frames/process_time));
+#endif
    }
 
    static float db2gain(float val)
@@ -88,6 +109,11 @@ struct PlugEQ : public AbstractPlugin
 
    dsp_eq_state_t *eq_l;
    dsp_eq_state_t *eq_r;
+
+#ifdef PERF_TEST
+   double process_time;
+   uint64_t process_frames;
+#endif
 };
 
 static void *dsp_init(const ssnes_dsp_info_t *info)

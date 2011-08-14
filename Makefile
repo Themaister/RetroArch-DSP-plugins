@@ -3,6 +3,12 @@ TARGETS = snes_reverb.so snes_wah.so snes_phaser.so snes_iir.so snes_echo.so sne
 CXXFLAGS += -O3 -g -fPIC -Wall -pedantic -std=gnu++0x
 CFLAGS += -O3 -g -fPIC -Wall -pedantic -std=gnu99
 
+ifneq ($(PERF_TEST),)
+   CXXFLAGS += -DPERF_TEST
+   CFLAGS += -DPERF_TEST
+   LDFLAGS += -lrt
+endif
+
 HEADERS = $(wildcard *.h) $(wildcard *.hpp) $(wildcard */*.h) $(wildcard */*.hpp)
 
 all: $(TARGETS)
