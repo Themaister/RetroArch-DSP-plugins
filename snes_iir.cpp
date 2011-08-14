@@ -12,7 +12,8 @@ struct PlugIIR : public AbstractPlugin
    IIRFilter iir_r;
    float buf[4096];
 
-   PlugIIR(int input_rate, float freq, float gain) : rate(input_rate), type(0)
+   PlugIIR(int input_rate, float freq, float gain) :
+      AbstractPlugin(), rate(input_rate), type(0)
    {
       PluginOption opt = {0};
 

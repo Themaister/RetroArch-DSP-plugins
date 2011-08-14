@@ -7,7 +7,7 @@
 
 struct PlugEQ : public AbstractPlugin
 {
-   PlugEQ(float rate)
+   PlugEQ(float rate) : AbstractPlugin()
    {
       plug_layout = AbstractPlugin::Layout::Horizontal;
 

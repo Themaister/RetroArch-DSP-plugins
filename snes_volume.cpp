@@ -5,7 +5,7 @@
 
 struct PlugVolume : public AbstractPlugin
 {
-   PlugVolume()
+   PlugVolume() : AbstractPlugin()
    {
       PluginOption opt = {0};
 

@@ -12,7 +12,7 @@ struct PlugEcho : public AbstractPlugin
    Echo echo_r;
    float buf[4096];
 
-   PlugEcho(int delay, int amp)
+   PlugEcho(int delay, int amp) : AbstractPlugin()
    {
       PluginOption opt = {0};
       opt.type = PluginOption::Type::Double;

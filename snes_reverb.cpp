@@ -13,7 +13,7 @@ struct PlugReverb : public AbstractPlugin
    float buf[4096];
 
    PlugReverb(float drytime, float wettime, float damping,
-         float roomwidth, float roomsize)
+         float roomwidth, float roomsize) : AbstractPlugin()
    {
       PluginOption opt = {0};
       opt.type = PluginOption::Type::Double;

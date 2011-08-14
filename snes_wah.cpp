@@ -12,7 +12,7 @@ struct PlugWah : public AbstractPlugin
    WahWah wah_r;
    float buf[4096];
 
-   PlugWah(float freq, float startphase, float res, float depth, float freqofs)
+   PlugWah(float freq, float startphase, float res, float depth, float freqofs) : AbstractPlugin()
    {
       PluginOption opt = {0};
       opt.type = PluginOption::Type::Double;

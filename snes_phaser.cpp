@@ -13,7 +13,7 @@ struct PlugPhaser : public AbstractPlugin
    Phaser phase_r;
    float buf[4096];
 
-   PlugPhaser(float freq, float startphase, float fb, int depth, int stages, int drywet)
+   PlugPhaser(float freq, float startphase, float fb, int depth, int stages, int drywet) : AbstractPlugin()
    {
       PluginOption opt = {0};
       opt.type = PluginOption::Type::Double;
