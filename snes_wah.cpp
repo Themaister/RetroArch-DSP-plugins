@@ -14,13 +14,43 @@ struct PlugWah : public AbstractPlugin
 
    PlugWah(float freq, float startphase, float res, float depth, float freqofs)
    {
-      /*
-      dsp_options.push_back({FREQ, "LFO frequency", 0.1, 10.0, freq});
-      dsp_options.push_back({STARTPHASE, "LFO start phase", 0.0, 360.0, startphase});
-      dsp_options.push_back({RES, "LFO resonance", 0.0, 10.0, res});
-      dsp_options.push_back({DEPTH, "LFO depth", 0.0, 10.0, depth});
-      dsp_options.push_back({FREQOFS, "LFO frequency offset", 0.1, 10.0, freqofs});
-      */
+      PluginOption opt = {0};
+      opt.type = PluginOption::Type::Double;
+
+      opt.id = FREQ;
+      opt.description = "LFO frequency";
+      opt.d.min = 0.1;
+      opt.d.max = 10.0;
+      opt.d.current = freq;
+      dsp_options.push_back(opt);
+
+      opt.id = STARTPHASE;
+      opt.description = "LFO start phase";
+      opt.d.min = 0.0;
+      opt.d.max = 360.0;
+      opt.d.current = startphase;
+      dsp_options.push_back(opt);
+
+      opt.id = RES;
+      opt.description = "LFO resonance";
+      opt.d.min = 0.0;
+      opt.d.max = 10.0;
+      opt.d.current = res;
+      dsp_options.push_back(opt);
+
+      opt.id = DEPTH;
+      opt.description = "LFO depth";
+      opt.d.min = 0.0;
+      opt.d.max = 10.0;
+      opt.d.current = depth;
+      dsp_options.push_back(opt);
+
+      opt.id = FREQOFS;
+      opt.description = "LFO frequency offset";
+      opt.d.min = 0.1;
+      opt.d.max = 10.0;
+      opt.d.current = freqofs;
+      dsp_options.push_back(opt);
    }
 
    void set_option(PluginOption::ID id, double val)
