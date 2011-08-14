@@ -1,7 +1,7 @@
 TARGETS = snes_reverb.so snes_wah.so snes_phaser.so snes_iir.so snes_echo.so snes_volume.so snes_eq.so
 
-CXXFLAGS += -O3 -g -fPIC -Wall -pedantic -std=gnu++0x -march=native
-CFLAGS += -O3 -g -fPIC -Wall -pedantic -std=gnu99 -march=native
+CXXFLAGS += -O3 -g -fPIC -Wall -pedantic -std=gnu++0x
+CFLAGS += -O3 -g -fPIC -Wall -pedantic -std=gnu99
 
 HEADERS = $(wildcard *.h) $(wildcard *.hpp) $(wildcard */*.h) $(wildcard */*.hpp)
 
