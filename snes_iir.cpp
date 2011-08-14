@@ -12,62 +12,106 @@ struct PlugIIR : public AbstractPlugin
    IIRFilter iir_r;
    float buf[4096];
 
-   PlugIIR(float freq, float gain)
+   PlugIIR(int input_rate, float freq, float gain) : rate(input_rate), type(0)
    {
-      /*
       PluginOption opt = {0};
 
+      opt.type = PluginOption::Type::Double;
       opt.id = FREQ;
       opt.description = "Frequency";
-      opt.min = 50;
-      opt.max = 16000;
-      opt.current = freq;
+      opt.d.min = 50;
+      opt.d.max = 16000;
+      opt.d.current = freq;
       dsp_options.push_back(opt);
 
       opt.id = GAIN;
       opt.description = "Gain";
-      opt.min = -20;
-      opt.max = 20;
-      opt.current = gain;
+      opt.d.min = -50.0;
+      opt.d.max = 50.0;
+      opt.d.current = gain;
       dsp_options.push_back(opt);
-      */
+
+      opt.type = PluginOption::Type::Selection;
+      opt.id = TYPE;
+      opt.description = "Filter type";
+      opt.s.current = LPF;
+
+      opt.s.selection.push_back(PluginOption::Selection(LPF, "Low-pass filter"));
+      opt.s.selection.push_back(PluginOption::Selection(HPF, "High-pass filter"));
+      opt.s.selection.push_back(PluginOption::Selection(BPCSGF, "Band-pass filter 1"));
+      opt.s.selection.push_back(PluginOption::Selection(BPZPGF, "Band-pass filter 2"));
+      opt.s.selection.push_back(PluginOption::Selection(APF, "All-pass filter"));
+      opt.s.selection.push_back(PluginOption::Selection(NOTCH, "Notch filter"));
+      opt.s.selection.push_back(PluginOption::Selection(RIAA_phono, "RIAA record/tape de-emphasis"));
+      opt.s.selection.push_back(PluginOption::Selection(PEQ, "Peaking band EQ filter"));
+      opt.s.selection.push_back(PluginOption::Selection(BBOOST, "Bassboost filter"));
+      opt.s.selection.push_back(PluginOption::Selection(LSH, "Low-shelf filter"));
+      opt.s.selection.push_back(PluginOption::Selection(HSH, "High-shelf filter"));
+      opt.s.selection.push_back(PluginOption::Selection(RIAA_CD, "CD de-emphasis"));
+      
+      dsp_options.push_back(opt);
    }
 
-   void set_option(PluginOption::ID id, double val)
+   void set_option_double(PluginOption::ID id, double val)
    {
       switch (id)
       {
          case FREQ:
             iir_l.setFrequency(val);
             iir_r.setFrequency(val);
+            iir_l.init(rate, type);
+            iir_r.init(rate, type);
             break;
 
          case GAIN:
             iir_l.setGain(val);
             iir_r.setGain(val);
+            iir_l.init(rate, type);
+            iir_r.init(rate, type);
             break;
+
+         default:
+            std::cerr << "Err ..." << std::endl;
       }
    }
 
-   enum IDs : PluginOption::ID { FREQ, GAIN };
+   void set_option_selection(PluginOption::ID id, PluginOption::ID optid)
+   {
+      switch (id)
+      {
+         case TYPE:
+            type = optid;
+            iir_l.init(rate, type);
+            iir_r.init(rate, type);
+            break;
+
+         default:
+            std::cerr << "Err ..." << std::endl;
+      }
+   }
+
+   enum IDs : PluginOption::ID { FREQ, GAIN, TYPE };
+
+   int rate;
+   unsigned type;
 };
 
 static void* dsp_init(const ssnes_dsp_info_t *info)
 {
    CIniReader iniReader("ssnes_effect.cfg");
    int type = iniReader.ReadInteger("iir", "type", 0); 
-   float freq = iniReader.ReadFloat("iir","filter_frequency",1024.0);
-   int gain = iniReader.ReadInteger("iir","filter_gain",5);
+   float freq = iniReader.ReadFloat("iir","filter_frequency", 1024.0);
+   float gain = iniReader.ReadFloat("iir","filter_gain", 0.0);
 
-   PlugIIR *iir = new PlugIIR(freq, gain);
-   iir->iir_l.init(info->input_rate,type);
+   PlugIIR *iir = new PlugIIR(info->input_rate, freq, gain);
    iir->iir_l.setFrequency(freq);
    iir->iir_l.setQuality(0.707);
    iir->iir_l.setGain(gain);
-   iir->iir_r.init(info->input_rate,type);
+   iir->iir_l.init(info->input_rate, type);
    iir->iir_r.setFrequency(freq);
    iir->iir_r.setQuality(0.707);
    iir->iir_r.setGain(gain);
+   iir->iir_r.init(info->input_rate, type);
 
    return iir;
 }

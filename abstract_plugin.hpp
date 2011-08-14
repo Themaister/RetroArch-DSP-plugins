@@ -34,6 +34,8 @@ struct PluginOption
 
    struct Selection
    {
+      Selection(ID id_, const std::string &str)
+         : id(id_), description(str) {}
       ID id;
       std::string description;
    };
