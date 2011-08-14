@@ -15,54 +15,54 @@ struct PlugPhaser : public AbstractPlugin
 
    PlugPhaser(float freq, float startphase, float fb, int depth, int stages, int drywet)
    {
-      /*
       PluginOption opt = {0};
+      opt.type = PluginOption::Type::Double;
 
       opt.id = LFO_FREQ;
       opt.description = "LFO frequency";
-      opt.min = 0.05;
-      opt.max = 5.0;
-      opt.current = freq;
+      opt.d.min = 0.05;
+      opt.d.max = 5.0;
+      opt.d.current = freq;
       dsp_options.push_back(opt);
 
       opt.id = STARTPHASE;
       opt.description = "LFO start phase";
-      opt.min = 0;
-      opt.max = 256;
-      opt.current = startphase;
+      opt.d.min = 0;
+      opt.d.max = 256;
+      opt.d.current = startphase;
       dsp_options.push_back(opt);
 
       opt.id = LFO_FB;
       opt.description = "LFO feedback";
-      opt.min = 0;
-      opt.max = 1;
-      opt.current = fb;
+      opt.d.min = 0;
+      opt.d.max = 1;
+      opt.d.current = fb;
       dsp_options.push_back(opt);
 
       opt.id = DEPTH;
       opt.description = "LFO depth";
-      opt.min = 0;
-      opt.max = 200;
-      opt.current = depth;
-      dsp_options.push_back(opt);
-
-      opt.id = STAGES;
-      opt.description = "LFO stage amount";
-      opt.min = 0;
-      opt.max = 10;
-      opt.current = stages;
+      opt.d.min = 0;
+      opt.d.max = 200;
+      opt.d.current = depth;
       dsp_options.push_back(opt);
 
       opt.id = DRYWET;
       opt.description = "LFO dry/wet ratio";
-      opt.min = 0;
-      opt.max = 256;
-      opt.current = drywet;
+      opt.d.min = 0;
+      opt.d.max = 256;
+      opt.d.current = drywet;
       dsp_options.push_back(opt);
-      */
+
+      opt.type = PluginOption::Type::Integer;
+      opt.id = STAGES;
+      opt.description = "LFO stage amount";
+      opt.i.min = 0;
+      opt.i.max = 10;
+      opt.i.current = stages;
+      dsp_options.push_back(opt);
    }
 
-   void set_option(PluginOption::ID id, double val)
+   void set_option_double(PluginOption::ID id, double val)
    {
       switch (id)
       {
@@ -86,15 +86,27 @@ struct PlugPhaser : public AbstractPlugin
             phase_r.SetDepth(val);
             break;
 
+         case DRYWET:
+            phase_l.SetDryWet(val);
+            phase_r.SetDryWet(val);
+            break;
+
+         default:
+            std::cerr << "Err ..." << std::endl;
+      }
+   }
+
+   void set_option_int(PluginOption::ID id, int val)
+   {
+      switch (id)
+      {
          case STAGES:
             phase_l.SetStages(val);
             phase_r.SetStages(val);
             break;
 
-         case DRYWET:
-            phase_l.SetDryWet(val);
-            phase_r.SetDryWet(val);
-            break;
+         default:
+            std::cerr << "Err ..." << std::endl;
       }
    }
 
