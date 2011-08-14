@@ -119,3 +119,10 @@ void Plugin::set_option_selection(PluginOption::ID id, PluginOption::ID sel)
       reinterpret_cast<AbstractPlugin*>(plug_handle)->set_option_selection(id, sel);
 }
 
+AbstractPlugin::Layout Plugin::layout() const
+{
+   if (plug_handle)
+      reinterpret_cast<AbstractPlugin*>(plug_handle)->layout();
+   else
+      return AbstractPlugin::Layout::Vertical;
+}

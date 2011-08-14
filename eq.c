@@ -78,6 +78,8 @@ dsp_eq_state_t *dsp_eq_new(float input_rate, const float *bands, unsigned num_ba
       dsp_eq_set_gain(eq, i, 1.0);
    }
 
+   return eq;
+
 error:
    dsp_eq_free(eq);
    return NULL;

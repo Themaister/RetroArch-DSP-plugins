@@ -52,7 +52,16 @@ struct PluginOption
 class AbstractPlugin
 {
    public:
-      virtual bool is_resampler() const { return false; };
+      enum class Layout
+      {
+         Vertical,
+         Horizontal
+      };
+
+      AbstractPlugin() : plug_layout(Layout::Vertical) {}
+
+      virtual bool is_resampler() const { return false; }
+      virtual Layout layout() const { return plug_layout; }
       virtual const std::list<PluginOption>& options() { return dsp_options; }
       virtual void set_option_double(PluginOption::ID id, double val)
       {
@@ -75,6 +84,7 @@ class AbstractPlugin
 
    protected:
       std::list<PluginOption> dsp_options;
+      Layout plug_layout;
 };
 
 #endif

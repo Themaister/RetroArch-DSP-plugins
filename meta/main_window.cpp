@@ -78,7 +78,10 @@ PluginSettings::PluginSettings(std::shared_ptr<Plugin> &plug, QWidget *parent)
    connect(remove_btn, SIGNAL(clicked()), this, SLOT(remove()));
    vbox->addLayout(hbox);
 
-   options = new QVBoxLayout;
+   if (plugin->layout() == AbstractPlugin::Layout::Vertical)
+      options = new QVBoxLayout;
+   else
+      options = new QHBoxLayout;
 
    update_controls();
 
@@ -149,19 +152,22 @@ void PluginSettings::update_controls()
    auto list = plugin->options();
    for (auto itr = list.begin(); itr != list.end(); ++itr)
    {
+      Qt::Orientation orient = plugin->layout() == AbstractPlugin::Layout::Vertical ?
+         Qt::Horizontal : Qt::Vertical;
+
       QWidget *widget;
       switch (itr->type)
       {
          case PluginOption::Type::Double:
-            widget = new PluginSettingDouble(plugin, *itr, this);
+            widget = new PluginSettingDouble(plugin, *itr, orient, this);
             break;
 
          case PluginOption::Type::Integer:
-            widget = new PluginSettingInteger(plugin, *itr, this);
+            widget = new PluginSettingInteger(plugin, *itr, orient, this);
             break;
 
          case PluginOption::Type::Selection:
-            widget = new PluginSettingSelection(plugin, *itr, this);
+            widget = new PluginSettingSelection(plugin, *itr, orient, this);
             break;
 
          default:
@@ -174,7 +180,9 @@ void PluginSettings::update_controls()
 }
 
 PluginSettingDouble::PluginSettingDouble(std::shared_ptr<Plugin> &plug,
-      const PluginOption &opt, QWidget *parent)
+      const PluginOption &opt,
+      Qt::Orientation orient,
+      QWidget *parent)
    : QWidget(parent), plugin(plug)
 {
    id = opt.id;
@@ -182,19 +190,24 @@ PluginSettingDouble::PluginSettingDouble(std::shared_ptr<Plugin> &plug,
    max = opt.d.max;
    current = opt.d.current;
 
-   QHBoxLayout *hbox = new QHBoxLayout;
-   hbox->addWidget(new QLabel(QString::fromUtf8(opt.description.c_str()), this));
-   slider = new QSlider(Qt::Horizontal, this);
+   QBoxLayout *box;
+   if (orient == Qt::Vertical)
+      box = new QVBoxLayout;
+   else
+      box = new QHBoxLayout;
+
+   box->addWidget(new QLabel(QString::fromUtf8(opt.description.c_str()), this));
+   slider = new QSlider(orient, this);
    slider->setMinimum(0);
    slider->setMaximum(Intervals);
    connect(slider, SIGNAL(valueChanged(int)), this, SLOT(updated()));
-   hbox->addWidget(slider);
+   box->addWidget(slider);
 
    value = new QLabel(QString::number(current, 'f', 1));
-   hbox->addWidget(value);
+   box->addWidget(value);
 
    val2slide(current);
-   setLayout(hbox);
+   setLayout(box);
 }
 
 void PluginSettingDouble::updated()
@@ -220,15 +233,22 @@ void PluginSettingDouble::val2slide(double val)
 }
 
 PluginSettingInteger::PluginSettingInteger(std::shared_ptr<Plugin> &plug,
-      const PluginOption &opt, QWidget *parent)
+      const PluginOption &opt,
+      Qt::Orientation orient,
+      QWidget *parent)
    : QWidget(parent), plugin(plug)
 {
    id = opt.id;
 
-   QHBoxLayout *hbox = new QHBoxLayout;
-   hbox->addWidget(new QLabel(QString::fromUtf8(opt.description.c_str()), this));
+   QBoxLayout *box;
+   if (orient == Qt::Vertical)
+      box = new QVBoxLayout;
+   else
+      box = new QHBoxLayout;
 
-   QSlider *slider = new QSlider(Qt::Horizontal, this);
+   box->addWidget(new QLabel(QString::fromUtf8(opt.description.c_str()), this));
+
+   QSlider *slider = new QSlider(orient, this);
    slider->setMinimum(opt.i.min);
    slider->setMaximum(opt.i.max);
    slider->setValue(opt.i.current);
@@ -238,10 +258,10 @@ PluginSettingInteger::PluginSettingInteger(std::shared_ptr<Plugin> &plug,
    value->setNum(opt.i.current);
    connect(slider, SIGNAL(valueChanged(int)), value, SLOT(setNum(int)));
 
-   hbox->addWidget(slider);
-   hbox->addWidget(value);
+   box->addWidget(slider);
+   box->addWidget(value);
 
-   setLayout(hbox);
+   setLayout(box);
 }
 
 void PluginSettingInteger::updated(int value)
@@ -252,12 +272,20 @@ void PluginSettingInteger::updated(int value)
 }
 
 PluginSettingSelection::PluginSettingSelection(std::shared_ptr<Plugin> &plug,
-      const PluginOption &opt, QWidget *parent)
+      const PluginOption &opt, 
+      Qt::Orientation orient,
+      QWidget *parent)
    : QWidget(parent), plugin(plug)
 {
    id = opt.id;
-   QHBoxLayout *hbox = new QHBoxLayout;
-   hbox->addWidget(new QLabel(QString::fromUtf8(opt.description.c_str()), this));
+
+   QBoxLayout *box;
+   if (orient == Qt::Vertical)
+      box = new QVBoxLayout;
+   else
+      box = new QHBoxLayout;
+
+   box->addWidget(new QLabel(QString::fromUtf8(opt.description.c_str()), this));
 
    combo = new QComboBox(this);
    
@@ -269,9 +297,9 @@ PluginSettingSelection::PluginSettingSelection(std::shared_ptr<Plugin> &plug,
       combo->setCurrentIndex(index);
 
    connect(combo, SIGNAL(currentIndexChanged(int)), this, SLOT(indexChanged(int)));
-   hbox->addWidget(combo);
+   box->addWidget(combo);
 
-   setLayout(hbox);
+   setLayout(box);
 }
 
 void PluginSettingSelection::indexChanged(int index)

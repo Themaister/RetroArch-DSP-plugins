@@ -32,6 +32,7 @@ class Plugin
       void enabled(bool enable = true);
 
       bool is_resampler() const;
+      AbstractPlugin::Layout layout() const;
       const std::list<PluginOption>& options() const;
 
       void set_option_double(PluginOption::ID id, double value);

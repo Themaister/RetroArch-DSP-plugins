@@ -28,7 +28,8 @@ class PluginSettingDouble : public QWidget
    Q_OBJECT
 
    public:
-      PluginSettingDouble(std::shared_ptr<Plugin> &plug, const PluginOption &opt, QWidget *parent = 0);
+      PluginSettingDouble(std::shared_ptr<Plugin> &plug, const PluginOption &opt,
+            Qt::Orientation orient, QWidget *parent = 0);
 
    private slots:
       void updated();
@@ -53,7 +54,8 @@ class PluginSettingInteger : public QWidget
    Q_OBJECT
 
    public:
-      PluginSettingInteger(std::shared_ptr<Plugin> &plug, const PluginOption &opt, QWidget *parent = 0);
+      PluginSettingInteger(std::shared_ptr<Plugin> &plug, const PluginOption &opt,
+            Qt::Orientation orient, QWidget *parent = 0);
 
    private slots:
       void updated(int);
@@ -68,7 +70,8 @@ class PluginSettingSelection : public QWidget
    Q_OBJECT
 
    public:
-      PluginSettingSelection(std::shared_ptr<Plugin> &plug, const PluginOption &opt, QWidget *parent = 0);
+      PluginSettingSelection(std::shared_ptr<Plugin> &plug, const PluginOption &opt,
+            Qt::Orientation orient, QWidget *parent = 0);
 
    private slots:
       void indexChanged(int);
@@ -95,7 +98,7 @@ class PluginSettings : public QWidget
       std::shared_ptr<Plugin> &plugin;
       QLineEdit *path;
 
-      QVBoxLayout *options;
+      QBoxLayout *options;
       QList<QWidget*> widgets;
       QTabWidget *tab_widget;
 
