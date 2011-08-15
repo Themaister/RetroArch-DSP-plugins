@@ -13,7 +13,7 @@
 #define M_PI 3.14159265
 #endif
 
-#define TAPS 64
+#define TAPS 32
 
 #ifdef __SSE3__
 typedef union
