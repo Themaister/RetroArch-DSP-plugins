@@ -28,7 +28,7 @@ typedef union
    vec4 vec[TAPS / 4 + 2]; // Wraparound for unaligned reads
    float f[TAPS + 8];
 } vec_filt;
-#elif defined(__SSE3__)
+#elif defined(__SSE__)
 #define FILT_OVERRUN 4
 typedef union
 {
@@ -158,7 +158,7 @@ static float calculate_fir(const float * restrict samples, const float * restric
 
    return final;
 }
-#elif defined(__SSE3__)
+#elif defined(__SSE__)
 static float calculate_fir(const float * restrict samples, const float * restrict coeffs,
       unsigned buf_ptr)
 {
@@ -220,7 +220,7 @@ void dsp_eq_set_gain(dsp_eq_state_t *eq, unsigned band, float gain)
 {
    for (unsigned i = 0; i < TAPS + FILT_OVERRUN; i++)
    {
-#if defined(__SSE3__) || defined(__ALTIVEC__)
+#if defined(__SSE__) || defined(__ALTIVEC__)
       eq->bpf[band].f[i] = gain * eq->bpf_coeff[band].f[i];
 #else
       eq->bpf[band][i] = gain * eq->bpf_coeff[band][i];
@@ -230,7 +230,7 @@ void dsp_eq_set_gain(dsp_eq_state_t *eq, unsigned band, float gain)
 
 float dsp_eq_process(dsp_eq_state_t *eq, float sample)
 {
-#if defined(__SSE3__) || defined(__ALTIVEC__)
+#if defined(__SSE__) || defined(__ALTIVEC__)
    eq->buffer.f[eq->buf_ptr] = sample;
 #else
    eq->buffer[eq->buf_ptr] = sample;
@@ -239,7 +239,7 @@ float dsp_eq_process(dsp_eq_state_t *eq, float sample)
    float sum = 0.0;
    for (unsigned i = 0; i < eq->num_filt; i++)
    {
-#if defined(__SSE3__) || defined(__ALTIVEC__)
+#if defined(__SSE__) || defined(__ALTIVEC__)
       sum += calculate_fir(eq->buffer.f, eq->bpf[i].f, eq->buf_ptr);
 #else
       sum += calculate_fir(eq->buffer, eq->bpf[i], eq->buf_ptr);
