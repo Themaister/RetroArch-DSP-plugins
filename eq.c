@@ -1,13 +1,19 @@
 #include "eq.h"
 
-#ifdef __SSE3__
-#include <pmmintrin.h>
+#ifdef __SSE__
+#include <xmmintrin.h>
+#endif
+
+#ifdef __ALTIVEC__
+#include <altivec.h>
+typedef vector float vec4;
 #endif
 
 #include <stdlib.h>
 #include <math.h>
 #include <complex.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265
@@ -15,14 +21,23 @@
 
 #define TAPS 32
 
-#ifdef __SSE3__
+#if defined(__ALTIVEC__)
+#define FILT_OVERRUN 8
+typedef union
+{
+   vec4 vec[TAPS / 4 + 2]; // Wraparound for unaligned reads
+   float f[TAPS + 8];
+} vec_filt;
+#elif defined(__SSE3__)
+#define FILT_OVERRUN 4
 typedef union
 {
    __m128 vec[TAPS / 4 + 1]; // Wraparound for unaligned reads
    float f[TAPS + 4];
 } vec_filt;
 #else
-typedef float vec_filt[TAPS + 4];
+typedef float vec_filt[TAPS];
+#define FILT_OVERRUN 0
 #endif
 
 static void generate_band_pass(float *fir_out, unsigned num_fir, float freq, float input_rate)
@@ -39,7 +54,7 @@ static void generate_band_pass(float *fir_out, unsigned num_fir, float freq, flo
    for (unsigned i = 0; i < num_fir; i++)
       fir_out[i] /= abs;
 
-   for (unsigned i = 0; i < 4; i++)
+   for (unsigned i = 0; i < FILT_OVERRUN; i++)
       fir_out[num_fir + i] = fir_out[i];
 }
 
@@ -70,13 +85,21 @@ dsp_eq_state_t *dsp_eq_new(float input_rate, const float *bands, unsigned num_ba
 
    for (unsigned i = 0; i < num_bands; i++)
    {
-#ifdef __SSE3__
+#if defined(__SSE__) || defined(__ALTIVEC__)
       generate_band_pass(eq->bpf_coeff[i].f, TAPS, bands[i], input_rate);
 #else
       generate_band_pass(eq->bpf_coeff[i], TAPS, bands[i], input_rate);
 #endif
       dsp_eq_set_gain(eq, i, 1.0);
    }
+
+#if defined(__ALTIVEC__)
+   fprintf(stderr, "[Equalizer]: AltiVec/VMX optimized!\n");
+#elif defined(__SSE__)
+   fprintf(stderr, "[Equalizer]: SSE optimized!\n");
+#else
+   fprintf(stderr, "[Equalizer]: Plain C99, how lame!\n");
+#endif
 
    return eq;
 
@@ -85,7 +108,57 @@ error:
    return NULL;
 }
 
-#ifdef __SSE3__
+#if defined(__ALTIVEC__)
+#define TAPS_MASK (TAPS * 4 - 1)
+static float calculate_fir(const float * restrict samples, const float * restrict coeffs,
+      unsigned buf_ptr)
+{
+   unsigned fir_ptr = 4 * ((TAPS - buf_ptr) & (TAPS - 1));
+   vec4 sum0 = vec_splats(0.0f);
+   vec4 sum1 = vec_splats(0.0f);
+   vec4 sum2 = vec_splats(0.0f);
+   vec4 sum3 = vec_splats(0.0f);
+   vector unsigned char mask = vec_lvsl(fir_ptr, coeffs);
+
+   for (unsigned i = 0; i < TAPS * 4; i += 64, fir_ptr += 64)
+   {
+      vec4 samp0 = vec_ld(i +  0, samples);
+      vec4 samp1 = vec_ld(i + 16, samples);
+      vec4 samp2 = vec_ld(i + 32, samples);
+      vec4 samp3 = vec_ld(i + 48, samples);
+
+      vec4 v0 = vec_ld((fir_ptr +  0) & TAPS_MASK, coeffs);
+      vec4 v1 = vec_ld((fir_ptr + 16) & TAPS_MASK, coeffs);
+      vec4 v2 = vec_ld((fir_ptr + 32) & TAPS_MASK, coeffs);
+      vec4 v3 = vec_ld((fir_ptr + 48) & TAPS_MASK, coeffs);
+      vec4 v4 = vec_ld((fir_ptr + 64) & TAPS_MASK, coeffs);
+      vec4 cof0 = vec_perm(v0, v1, mask);
+      vec4 cof1 = vec_perm(v1, v2, mask);
+      vec4 cof2 = vec_perm(v2, v3, mask);
+      vec4 cof3 = vec_perm(v3, v4, mask);
+
+      sum0 = vec_madd(samp0, cof0, sum0);
+      sum1 = vec_madd(samp1, cof1, sum1);
+      sum2 = vec_madd(samp2, cof2, sum2);
+      sum3 = vec_madd(samp3, cof3, sum3);
+   }
+
+   vec4 sum = sum0 + sum1 + sum2 + sum3;
+
+   union
+   {
+      vec4 vec;
+      float f[4];
+   } u;
+   u.vec = sum;
+
+   float final = 0.0f;
+   for (unsigned i = 0; i < 4; i++)
+      final += u.f[i];
+
+   return final;
+}
+#elif defined(__SSE3__)
 static float calculate_fir(const float * restrict samples, const float * restrict coeffs,
       unsigned buf_ptr)
 {
@@ -114,9 +187,7 @@ static float calculate_fir(const float * restrict samples, const float * restric
          sum[j] = _mm_add_ps(sum[j], res[j]);
    }
 
-   __m128 tmp0 = _mm_hadd_ps(sum[0], sum[1]);
-   __m128 tmp1 = _mm_hadd_ps(sum[2], sum[3]);
-   __m128 tmp = _mm_hadd_ps(tmp0, tmp1);
+   __m128 tmp = _mm_add_ps(_mm_add_ps(sum[0], sum[1]), _mm_add_ps(sum[2], sum[3]));
 
    union
    {
@@ -125,7 +196,7 @@ static float calculate_fir(const float * restrict samples, const float * restric
    } u;
    u.vec = tmp;
 
-   float final = 0.0;
+   float final = 0.0f;
    for (unsigned i = 0; i < 4; i++)
       final += u.f[i];
 
@@ -147,9 +218,9 @@ static float calculate_fir(const float * restrict buffer, const float * restrict
 
 void dsp_eq_set_gain(dsp_eq_state_t *eq, unsigned band, float gain)
 {
-   for (unsigned i = 0; i < TAPS + 4; i++)
+   for (unsigned i = 0; i < TAPS + FILT_OVERRUN; i++)
    {
-#ifdef __SSE3__
+#if defined(__SSE3__) || defined(__ALTIVEC__)
       eq->bpf[band].f[i] = gain * eq->bpf_coeff[band].f[i];
 #else
       eq->bpf[band][i] = gain * eq->bpf_coeff[band][i];
@@ -159,7 +230,7 @@ void dsp_eq_set_gain(dsp_eq_state_t *eq, unsigned band, float gain)
 
 float dsp_eq_process(dsp_eq_state_t *eq, float sample)
 {
-#ifdef __SSE3__
+#if defined(__SSE3__) || defined(__ALTIVEC__)
    eq->buffer.f[eq->buf_ptr] = sample;
 #else
    eq->buffer[eq->buf_ptr] = sample;
@@ -168,7 +239,7 @@ float dsp_eq_process(dsp_eq_state_t *eq, float sample)
    float sum = 0.0;
    for (unsigned i = 0; i < eq->num_filt; i++)
    {
-#ifdef __SSE3__
+#if defined(__SSE3__) || defined(__ALTIVEC__)
       sum += calculate_fir(eq->buffer.f, eq->bpf[i].f, eq->buf_ptr);
 #else
       sum += calculate_fir(eq->buffer, eq->bpf[i], eq->buf_ptr);
