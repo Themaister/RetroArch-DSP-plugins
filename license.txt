@@ -1,3 +1,4 @@
+Copyright (c) 2011, Brad Miller
 Copyright (c) 2011, Hans-Kristian Arntzen
 
 Permission to use, copy, modify, and/or distribute this software for any
