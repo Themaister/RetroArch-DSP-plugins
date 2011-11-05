@@ -6,15 +6,29 @@
 #include "inireader.h"
 #include "abstract_plugin.hpp"
 
+#ifdef PERF_TEST
+#include <time.h>
+#endif
+
 struct PlugIIR : public AbstractPlugin
 {
    IIRFilter iir_l __attribute__((aligned(16)));
    IIRFilter iir_r __attribute__((aligned(16)));
    float buf[4096] __attribute__((aligned(16)));
 
+#ifdef PERF_TEST
+   double process_time;
+   uint64_t process_frames;
+#endif
+
    PlugIIR(int input_rate, float freq, float gain) :
       AbstractPlugin(), rate(input_rate), type(0)
    {
+#ifdef PERF_TEST
+      process_frames = 0;
+      process_time = 0.0;
+#endif
+
       PluginOption opt = {0};
 
       opt.type = PluginOption::Type::Double;
@@ -124,6 +138,12 @@ static void dsp_process(void *data, ssnes_dsp_output_t *output,
 
    output->samples = iir->buf;
 
+#ifdef PERF_TEST
+   struct timespec tv_old;
+   struct timespec tv_new;
+   clock_gettime(CLOCK_MONOTONIC, &tv_old);
+#endif
+
 #ifdef __SSE2__
    iir->iir_l.ProcessBatch(iir->buf + 0, input->samples + 0, input->frames, 2);
    iir->iir_r.ProcessBatch(iir->buf + 1, input->samples + 1, input->frames, 2);
@@ -136,6 +156,14 @@ static void dsp_process(void *data, ssnes_dsp_output_t *output,
 		iir->buf[i] = iir->iir_r.Process(input->samples[i]);
 		i++;
 	}
+#endif
+
+#ifdef PERF_TEST
+   clock_gettime(CLOCK_MONOTONIC, &tv_new);
+   double time = (double)(tv_new.tv_sec - tv_old.tv_sec) + (tv_new.tv_nsec - tv_old.tv_nsec) / 1000000000.0;
+   iir->process_time += time;
+   iir->process_frames += input->frames;
+   fprintf(stderr, "[IIR]: Processing @ %10.0f frames/s.\n", static_cast<float>(iir->process_frames/iir->process_time));
 #endif
 
 	output->frames = input->frames;
