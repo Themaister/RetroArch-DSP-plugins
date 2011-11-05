@@ -26,7 +26,7 @@ all: $(TARGET)
 	moc -o $@ $< $(INCLUDES)
 
 $(TARGET): $(OBJ)
-	$(CXX) -o $@ $(OBJ) $(QT_LIBS) -s -shared -Wl,--no-undefined
+	$(CXX) -o $@ $(OBJ) $(QT_LIBS) -s -shared
 
 clean:
 	rm -f *.o

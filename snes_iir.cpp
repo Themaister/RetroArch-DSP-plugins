@@ -8,9 +8,9 @@
 
 struct PlugIIR : public AbstractPlugin
 {
-   IIRFilter iir_l;
-   IIRFilter iir_r;
-   float buf[4096];
+   IIRFilter iir_l __attribute__((aligned(16)));
+   IIRFilter iir_r __attribute__((aligned(16)));
+   float buf[4096] __attribute__((aligned(16)));
 
    PlugIIR(int input_rate, float freq, float gain) :
       AbstractPlugin(), rate(input_rate), type(0)
@@ -123,6 +123,11 @@ static void dsp_process(void *data, ssnes_dsp_output_t *output,
    PlugIIR *iir = reinterpret_cast<PlugIIR*>(data);
 
    output->samples = iir->buf;
+
+#ifdef __SSE2__
+   iir->iir_l.ProcessBatch(iir->buf + 0, input->samples + 0, input->frames, 2);
+   iir->iir_l.ProcessBatch(iir->buf + 1, input->samples + 1, input->frames, 2);
+#else
    int num_samples = input->frames * 2;
    for (int i = 0; i<num_samples;)
 	{
@@ -131,6 +136,8 @@ static void dsp_process(void *data, ssnes_dsp_output_t *output,
 		iir->buf[i] = iir->iir_r.Process(input->samples[i]);
 		i++;
 	}
+#endif
+
 	output->frames = input->frames;
 	output->should_resample = SSNES_TRUE;
 }

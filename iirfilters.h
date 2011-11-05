@@ -3,6 +3,10 @@
 
 #include <stddef.h>
 
+#ifdef __SSE2__
+#include <emmintrin.h>
+#endif
+
 /* filter types */
 enum {
 	LPF, /* low pass filter */
@@ -22,15 +26,28 @@ enum {
 class IIRFilter
 {
 private:                           
+#ifdef __SSE2__
+   __m128 fir_coeff;
+   __m128 iir_coeff;
+   __m128 fir_buf;
+   __m128 iir_buf;
+#endif
+
 	float pf_freq, pf_qfact, pf_gain;
 	int type, pf_q_is_bandwidth; 
 	float xn1,xn2,yn1,yn2;
 	float omega, cs, a1pha, beta, b0, b1, b2, a0, a1,a2, A, sn;
+
 public:
 	
 	IIRFilter();
 	~IIRFilter();
 	float Process(float samp);
+
+#ifdef __SSE2__
+   void ProcessBatch(float *out, const float *in, unsigned frames, unsigned interleave);
+#endif
+
 	void setFrequency(float val);
 	void setQuality(float val);
 	void setGain(float val);
