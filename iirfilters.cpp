@@ -8,6 +8,10 @@
 #include <iostream>
 using namespace std;
 
+#ifdef __SSE3__
+#include <pmmintrin.h>
+#endif
+
 
 #ifndef M_PI
 #define M_PI		3.1415926535897932384626433832795
@@ -201,23 +205,6 @@ void IIRFilter::init(int samplerate, int filter_type)
 
 float IIRFilter::Process(float samp)
 {
-#ifdef __SSE2__
-   __m128 input = _mm_set_ss(samp);
-
-   fir_buf = _mm_or_ps((__m128)_mm_slli_si128((__m128i)fir_buf, 4), input); // Shift out floats
-
-   __m128 res = _mm_add_ps(_mm_mul_ps(fir_buf, fir_coeff), _mm_mul_ps(iir_buf, iir_coeff));
-
-   union
-   {
-      __m128 vec;
-      float f[4];
-   } u;
-   u.vec = res;
-   float result = u.f[0] + u.f[1] + u.f[2];
-   iir_buf = _mm_or_ps((__m128)_mm_slli_si128((__m128i)iir_buf, 4), _mm_set_ss(result)); // Shift out floats
-   return result;
-#else
 	float out, in = 0;
 	in = samp;
 	out = (b0 * in + b1 * xn1 + b2 * xn2 - a1 * yn1 - a2 * yn2) / a0;
@@ -226,7 +213,6 @@ float IIRFilter::Process(float samp)
 	yn2 = yn1;
 	yn1 = out;
 	return out;
-#endif
 }
 
 #ifdef __SSE2__
@@ -237,20 +223,27 @@ void IIRFilter::ProcessBatch(float *out, const float *in, unsigned frames, unsig
    __m128 fir_buf = this->fir_buf; 
    __m128 iir_buf = this->iir_buf; 
 
-   union
-   {
-      __m128 vec;
-      float f[4];
-   } u;
+#ifdef __SSE3__
+   __m128 zero = _mm_setzero_ps();
+#endif
 
    for (unsigned i = 0; i < frames; in += interleave, i++, out += interleave)
    {
-      fir_buf = _mm_or_ps((__m128)_mm_slli_si128((__m128i)fir_buf, 4), _mm_load_ss(in));
-      u.vec = _mm_add_ps(_mm_mul_ps(fir_buf, fir_coeff), _mm_mul_ps(iir_buf, iir_coeff));
+      fir_buf = _mm_or_ps(_mm_shuffle_ps(fir_buf, fir_buf, _MM_SHUFFLE(3, 1, 0, 3)), _mm_load_ss(in));
 
-      float result = u.f[0] + u.f[1] + u.f[2];
-      iir_buf = _mm_or_ps((__m128)_mm_slli_si128((__m128i)iir_buf, 4), _mm_set_ss(result));
-      *out = result;
+      __m128 res = _mm_add_ps(_mm_mul_ps(fir_buf, fir_coeff), _mm_mul_ps(iir_buf, iir_coeff));
+
+#ifdef __SSE3__
+      res = _mm_hadd_ps(res, zero);
+      res = _mm_hadd_ps(res, zero);
+#else
+      res = _mm_add_ss(_mm_add_ss(_mm_shuffle_ps(res, res, _MM_SHUFFLE(3, 3, 3, 0)),
+            _mm_shuffle_ps(res, res, _MM_SHUFFLE(3, 3, 3, 1))), _mm_shuffle_ps(res, res, _MM_SHUFFLE(3, 3, 3, 2)));
+#endif
+
+      iir_buf = _mm_or_ps(_mm_shuffle_ps(iir_buf, iir_buf, _MM_SHUFFLE(3, 1, 0, 3)), res);
+
+      _mm_store_ss(out, res);
    }
 
    this->fir_buf = fir_buf;

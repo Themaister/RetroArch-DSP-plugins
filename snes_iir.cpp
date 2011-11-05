@@ -126,7 +126,7 @@ static void dsp_process(void *data, ssnes_dsp_output_t *output,
 
 #ifdef __SSE2__
    iir->iir_l.ProcessBatch(iir->buf + 0, input->samples + 0, input->frames, 2);
-   iir->iir_l.ProcessBatch(iir->buf + 1, input->samples + 1, input->frames, 2);
+   iir->iir_r.ProcessBatch(iir->buf + 1, input->samples + 1, input->frames, 2);
 #else
    int num_samples = input->frames * 2;
    for (int i = 0; i<num_samples;)
