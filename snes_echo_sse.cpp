@@ -7,26 +7,20 @@
 #include "ssnes_dsp.h"
 #include <emmintrin.h>
 #include <algorithm>
+#include <iterator>
+#include <type_traits>
 #include "abstract_plugin.hpp"
+
+#define ALIGNED __attribute__((aligned(16))) // Should use C++11 alignas(), but doesn't seem to work :(
 
 #define ECHO_MS 150
 #define AMP 0.2
 
 struct EchoFilter : public AbstractPlugin
 {
-   union
-   {
-      float echo_buffer[0x10000];
-      __m128 echo_buffer_vec[0x10000 / 4];
-   };
-
-   union
-   {
-      float buffer[4096];
-      __m128 buffer_vec[4096 / 4];
-   };
-
-   float scratch_buf[4];
+   float echo_buffer[0x10000] ALIGNED;
+   float buffer[4096] ALIGNED;
+   float scratch_buf[4] ALIGNED;
 
    unsigned buf_size;
 
@@ -41,9 +35,9 @@ struct EchoFilter : public AbstractPlugin
       scratch_ptr = 0;
       amp = 0.0;
       input_rate = 32000.0;
-      std::fill(echo_buffer, echo_buffer + 0x10000, 0.0);
-      std::fill(buffer, buffer + 4096, 0.0);
-      std::fill(scratch_buf, scratch_buf + 4, 0.0);
+      std::fill(std::begin(echo_buffer), std::end(echo_buffer), 0.0);
+      std::fill(std::begin(buffer), std::end(buffer), 0.0);
+      std::fill(std::begin(scratch_buf), std::end(scratch_buf), 0.0);
 
       PluginOption opt = {0};
       opt.type = PluginOption::Type::Double;
