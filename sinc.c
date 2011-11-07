@@ -4,23 +4,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ssnes_dsp.h"
-
-#ifdef __SSE3__
 #include <pmmintrin.h>
-#endif
 
-#define SIDELOBES 4
-#define PHASES 0x10000
+#define SIDELOBES 4 // 8-tap SINC.
+#define PHASES 0x4000
 
 #define ALIGNED __attribute__((aligned(16)))
 
 struct sinc_resampler
 {
-   float buffer[0x10000] ALIGNED;
+   float buffer[0x4000] ALIGNED;
    float buffer_l[2 * SIDELOBES] ALIGNED;
    float buffer_r[2 * SIDELOBES] ALIGNED;
-
-   float sinc_table[2 * (SIDELOBES + 2) * PHASES + 1];
+   float sinc_table[(2 * PHASES + 1) * (2 * SIDELOBES)] ALIGNED;
 
    double index;
    double ratio_r;
@@ -28,7 +24,7 @@ struct sinc_resampler
 
 static inline float sinc(float val)
 {
-   if (val == 0.0)
+   if (fabs(val) < 0.0001)
       return 1.0;
    else
       return sinf(val) / val;
@@ -36,18 +32,22 @@ static inline float sinc(float val)
 
 static void init_sinc_table(struct sinc_resampler *resamp)
 {
-   float *sinc_table_ptr = resamp->sinc_table + (SIDELOBES + 2) * PHASES;
-   for (int i = -((SIDELOBES + 2) * PHASES); i <= ((SIDELOBES + 2) * PHASES); i++)
-      sinc_table_ptr[i] = sinc(M_PI * i / (PHASES * (SIDELOBES + 2))) * sinc(M_PI * i / PHASES);
+   for (unsigned i = 0; i <= 2 * PHASES; i++)
+   {
+      float index = (float)i / PHASES - 1.5f;
+      for (unsigned j = 0; j < 8; j++)
+      {
+         float phase = M_PI * (SIDELOBES - j + index);
+         resamp->sinc_table[i * 8 + j] = sinc(phase / SIDELOBES) * sinc(phase);
+      }
+   }
 }
 
-#ifdef __SSE3__
 static unsigned resample_sse3(struct sinc_resampler *resamp, const float * restrict input, unsigned frames)
 {
    frames &= ~1;
 
-   float * restrict output = resamp->buffer;
-   const float * const sinc_table_ptr = resamp->sinc_table + (SIDELOBES + 2) * PHASES;
+   float *output = resamp->buffer;
    unsigned frames_out = 0;
 
    __m128 buffer_l[2] = { _mm_load_ps(resamp->buffer_l + 0), _mm_load_ps(resamp->buffer_l + 4) };
@@ -57,19 +57,11 @@ static unsigned resample_sse3(struct sinc_resampler *resamp, const float * restr
    {
       do
       {
-         // Load sinc values from LUT. (Caching issues?)
-         int base_ptr = round((resamp->index + SIDELOBES) * PHASES);
+         unsigned base_ptr = round((resamp->index + 1.5) * PHASES);
+
          __m128 sincs[2] = {
-            _mm_setr_ps(
-                  sinc_table_ptr[base_ptr - 0 * PHASES],
-                  sinc_table_ptr[base_ptr - 1 * PHASES],
-                  sinc_table_ptr[base_ptr - 2 * PHASES],
-                  sinc_table_ptr[base_ptr - 3 * PHASES]),
-            _mm_setr_ps(
-                  sinc_table_ptr[base_ptr - 4 * PHASES],
-                  sinc_table_ptr[base_ptr - 5 * PHASES],
-                  sinc_table_ptr[base_ptr - 6 * PHASES],
-                  sinc_table_ptr[base_ptr - 7 * PHASES]),
+            _mm_load_ps(resamp->sinc_table + base_ptr * 8 + 0),
+            _mm_load_ps(resamp->sinc_table + base_ptr * 8 + 4),
          };
 
          // Do teh math.
@@ -86,17 +78,18 @@ static unsigned resample_sse3(struct sinc_resampler *resamp, const float * restr
          frames_out++;
 
          resamp->index += resamp->ratio_r;
-      } while (resamp->index < 1.5);
+      } while (resamp->index < 0.5);
 
       resamp->index -= 2.0;
 
-      // Shuffle in new bytes in buffer.
       __m128 input_ =_mm_loadu_ps(input);
+      input += 4;
+
+      // Shuffle in new bytes in buffer.
       buffer_l[0] = _mm_shuffle_ps(buffer_l[0], buffer_l[1], _MM_SHUFFLE(1, 0, 3, 2));
       buffer_l[1] = _mm_shuffle_ps(buffer_l[1], input_, _MM_SHUFFLE(2, 0, 3, 2));
       buffer_r[0] = _mm_shuffle_ps(buffer_r[0], buffer_r[1], _MM_SHUFFLE(1, 0, 3, 2));
       buffer_r[1] = _mm_shuffle_ps(buffer_r[1], input_, _MM_SHUFFLE(3, 1, 3, 2));
-      input += 4;
    }
 
    _mm_store_ps(resamp->buffer_l + 0, buffer_l[0]);
@@ -105,71 +98,14 @@ static unsigned resample_sse3(struct sinc_resampler *resamp, const float * restr
    _mm_store_ps(resamp->buffer_r + 4, buffer_r[1]);
 
    return frames_out;
-
 }
-#else
-static unsigned resample_C(struct sinc_resampler *resamp, const float * restrict input, unsigned frames)
-{
-   frames &= ~1;
-   float * restrict output = resamp->buffer;
-
-   float * const buffer_l = resamp->buffer_l + SIDELOBES;
-   float * const buffer_r = resamp->buffer_r + SIDELOBES;
-   const float * const sinc_table_ptr = resamp->sinc_table + (SIDELOBES + 2) * PHASES;
-
-   unsigned frames_out = 0;
-
-   for (unsigned i = 0; i < frames; i += 2)
-   {
-      do
-      {
-         float sum_l = 0.0;
-         float sum_r = 0.0;
-
-         int base_ptr = round((resamp->index + SIDELOBES) * PHASES);
-         for (int j = -SIDELOBES; j <= SIDELOBES - 1; j++)
-         {
-            float sinc_val = sinc_table_ptr[base_ptr];
-            sum_l += buffer_l[j] * sinc_val;
-            sum_r += buffer_r[j] * sinc_val;
-            base_ptr -= PHASES;
-         }
-
-         *output++ = sum_l;
-         *output++ = sum_r;
-         frames_out++;
-         resamp->index += resamp->ratio_r;
-      } while (resamp->index < 1.5);
-
-      resamp->index -= 2.0;
-
-      for (unsigned i = 0; i < 2 * SIDELOBES - 2; i++)
-      {
-         resamp->buffer_l[i] = resamp->buffer_l[i + 2];
-         resamp->buffer_r[i] = resamp->buffer_r[i + 2];
-      }
-
-      resamp->buffer_l[2 * SIDELOBES - 2] = *input++;
-      resamp->buffer_r[2 * SIDELOBES - 2] = *input++;
-      resamp->buffer_l[2 * SIDELOBES - 1] = *input++;
-      resamp->buffer_r[2 * SIDELOBES - 1] = *input++;
-   }
-
-   return frames_out;
-}
-#endif
-
 
 static void dsp_process(void *data, ssnes_dsp_output_t *output,
       const ssnes_dsp_input_t *input)
 {
    struct sinc_resampler *resamp = data;
    output->samples = resamp->buffer;
-#ifdef __SSE3__
    output->frames = resample_sse3(resamp, input->samples, input->frames);
-#else
-   output->frames = resample_C(resamp, input->samples, input->frames);
-#endif
    output->should_resample = SSNES_FALSE;
 }
 
@@ -189,15 +125,11 @@ static void *dsp_init(const ssnes_dsp_info_t *info)
       return NULL;
 
    resamp->ratio_r = (double)info->input_rate / (double)info->output_rate;
-   resamp->index = 0.0;
+   resamp->index = -0.5;
 
    init_sinc_table(resamp);
 
-#ifdef __SSE3__
    fprintf(stderr, "[SINC resampler (SSE3)] loaded!\n");
-#else
-   fprintf(stderr, "[SINC resampler] loaded!\n");
-#endif
 
    return resamp;
 }
@@ -207,11 +139,7 @@ static const ssnes_dsp_plugin_t dsp_plug = {
    .process = dsp_process,
    .free = dsp_free,
    .api_version = SSNES_DSP_API_VERSION,
-#ifdef __SSE3__
    .ident = "Simple Sinc (SSE3)"
-#else
-   .ident = "Simple Sinc"
-#endif
 };
 
 SSNES_API_EXPORT const ssnes_dsp_plugin_t* SSNES_API_CALLTYPE
