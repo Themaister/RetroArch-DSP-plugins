@@ -5,18 +5,20 @@
 #include <string.h>
 #include "ssnes_dsp.h"
 #include <pmmintrin.h>
+#include <assert.h>
 
 #define SIDELOBES 4 // 8-tap SINC.
-#define PHASES 0x4000
+#define TAPS (SIDELOBES * 2)
+#define PHASES 0x10000
 
 #define ALIGNED __attribute__((aligned(16)))
 
 struct sinc_resampler
 {
    float buffer[0x4000] ALIGNED;
+   float sinc_table[(2 * PHASES + 4) * TAPS] ALIGNED;
    float buffer_l[2 * SIDELOBES] ALIGNED;
    float buffer_r[2 * SIDELOBES] ALIGNED;
-   float sinc_table[(2 * PHASES + 1) * (2 * SIDELOBES)] ALIGNED;
 
    double index;
    double ratio_r;
@@ -35,10 +37,10 @@ static void init_sinc_table(struct sinc_resampler *resamp)
    for (unsigned i = 0; i <= 2 * PHASES; i++)
    {
       float index = (float)i / PHASES - 1.5f;
-      for (unsigned j = 0; j < 8; j++)
+      for (int j = 0; j < TAPS; j++)
       {
-         float phase = M_PI * (SIDELOBES - j + index);
-         resamp->sinc_table[i * 8 + j] = sinc(phase / SIDELOBES) * sinc(phase);
+         float phase = M_PI * (index + SIDELOBES - j);
+         resamp->sinc_table[i * TAPS + j] = sinc(phase / (SIDELOBES + 1.0)) * sinc(phase);
       }
    }
 }
@@ -47,7 +49,13 @@ static unsigned resample_sse3(struct sinc_resampler *resamp, const float * restr
 {
    frames &= ~1;
 
-   float *output = resamp->buffer;
+   union
+   {
+      double *d;
+      float *f;
+   } u;
+   u.f = resamp->buffer;
+
    unsigned frames_out = 0;
 
    __m128 buffer_l[2] = { _mm_load_ps(resamp->buffer_l + 0), _mm_load_ps(resamp->buffer_l + 4) };
@@ -60,8 +68,8 @@ static unsigned resample_sse3(struct sinc_resampler *resamp, const float * restr
          unsigned base_ptr = round((resamp->index + 1.5) * PHASES);
 
          __m128 sincs[2] = {
-            _mm_load_ps(resamp->sinc_table + base_ptr * 8 + 0),
-            _mm_load_ps(resamp->sinc_table + base_ptr * 8 + 4),
+            _mm_load_ps(resamp->sinc_table + base_ptr * TAPS + 0),
+            _mm_load_ps(resamp->sinc_table + base_ptr * TAPS + 4),
          };
 
          // Do teh math.
@@ -72,9 +80,9 @@ static unsigned resample_sse3(struct sinc_resampler *resamp, const float * restr
          __m128 packed = _mm_hadd_ps(sum_left, sum_right);
          packed = _mm_hadd_ps(packed, packed);
 
-         _mm_storeu_ps(output, packed); // Save the whole vector. It will be overwritten anyways.
+         _mm_store_sd(u.d, (__m128d)packed); // Save the whole vector. It will be overwritten anyways.
 
-         output += 2;
+         u.d++;
          frames_out++;
 
          resamp->index += resamp->ratio_r;
@@ -151,7 +159,7 @@ SSNES_API_EXPORT const ssnes_dsp_plugin_t* SSNES_API_CALLTYPE
 int main(void)
 {
    const ssnes_dsp_plugin_t *plug = ssnes_dsp_plugin_init();
-   void *handle = plug->init(&(const ssnes_dsp_info_t) { .input_rate = 44100, .output_rate = 96000 });
+   void *handle = plug->init(&(const ssnes_dsp_info_t) { .input_rate = 44100, .output_rate = 48000 });
 
    int16_t int_buf[2048] ALIGNED;
    float float_buf[2048] ALIGNED;
