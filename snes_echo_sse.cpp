@@ -5,11 +5,14 @@
 #include <string.h>
 #include <stdint.h>
 #include "ssnes_dsp.h"
-#include <emmintrin.h>
 #include <algorithm>
 #include <iterator>
 #include <type_traits>
 #include "abstract_plugin.hpp"
+
+#include <emmintrin.h>
+
+// 4 source echo.
 
 #define ALIGNED __attribute__((aligned(16))) // Should use C++11 alignas(), but doesn't seem to work :(
 
@@ -18,70 +21,144 @@
 
 struct EchoFilter : public AbstractPlugin
 {
-   float echo_buffer[0x10000] ALIGNED;
+   float echo_buffer[4][0x10000] ALIGNED;
    float buffer[4096] ALIGNED;
    float scratch_buf[4] ALIGNED;
 
-   unsigned buf_size;
+   unsigned buf_size[4];
+   unsigned ptr[4];
 
-   unsigned ptr;
    unsigned scratch_ptr;
-   float amp;
+   __m128 amp[4] ALIGNED;
+   __m128 feedback ALIGNED;
    float input_rate;
 
    EchoFilter()
    {
-      ptr = 0;
+      std::fill(std::begin(ptr), std::end(ptr), 0.0);
+      std::fill(std::begin(amp), std::end(amp), _mm_set1_ps(AMP));
+
       scratch_ptr = 0;
-      amp = 0.0;
+      feedback = _mm_set1_ps(0.0);
+
       input_rate = 32000.0;
-      std::fill(std::begin(echo_buffer), std::end(echo_buffer), 0.0);
+      std::fill(&echo_buffer[0][0], &echo_buffer[4][0], 0.0);
       std::fill(std::begin(buffer), std::end(buffer), 0.0);
       std::fill(std::begin(scratch_buf), std::end(scratch_buf), 0.0);
 
       PluginOption opt = {0};
       opt.type = PluginOption::Type::Double;
 
-      opt.id = Echo;
-      opt.description = "Delay";
       opt.d.min = 1.0;
       opt.d.max = 800.0;
       opt.d.current = ECHO_MS;
+
+      opt.description = "Delay (#1)";
+      opt.id = Echo1;
+      dsp_options.push_back(opt);
+      opt.description = "Delay (#2)";
+      opt.id = Echo2;
+      dsp_options.push_back(opt);
+      opt.description = "Delay (#3)";
+      opt.id = Echo3;
+      dsp_options.push_back(opt);
+      opt.description = "Delay (#4)";
+      opt.id = Echo4;
       dsp_options.push_back(opt);
 
-      opt.id = Amp;
-      opt.description = "Amplification";
+      opt.d.min = 0.0;
+      opt.d.max = 0.5;
+      opt.d.current = AMP;
+
+      opt.description = "Amplification (#1)";
+      opt.id = Amp1;
+      dsp_options.push_back(opt);
+      opt.description = "Amplification (#2)";
+      opt.id = Amp2;
+      dsp_options.push_back(opt);
+      opt.description = "Amplification (#3)";
+      opt.id = Amp3;
+      dsp_options.push_back(opt);
+      opt.description = "Amplification (#4)";
+      opt.id = Amp4;
+      dsp_options.push_back(opt);
+
+      opt.description = "Echo feedback";
+      opt.id = Feedback;
       opt.d.min = 0.0;
       opt.d.max = 1.0;
-      opt.d.current = AMP;
+      opt.d.current = 0.0;
       dsp_options.push_back(opt);
    }
 
    void set_option_double(PluginOption::ID id, double val)
    {
+      unsigned index;
       switch (id)
       {
-         case Echo:
-            buf_size = val * (input_rate * 2) / 1000;
-            buf_size = (buf_size + 3) & ~3;
-            if (buf_size > sizeof(echo_buffer) / sizeof(float))
-               buf_size = sizeof(echo_buffer) / sizeof(float);
+         case Echo1:
+         case Echo2:
+         case Echo3:
+         case Echo4:
+            index = static_cast<unsigned>(id) - static_cast<unsigned>(Echo1);
+            buf_size[index] = val * (input_rate * 2) / 1000;
+            buf_size[index] = (buf_size[index] + 3) & ~3;
+            if (buf_size[index] > sizeof(echo_buffer[0]) / sizeof(float))
+               buf_size[index] = sizeof(echo_buffer[0]) / sizeof(float);
             break;
 
-         case Amp:
-            amp = val;
+         case Amp1:
+         case Amp2:
+         case Amp3:
+         case Amp4:
+            index = static_cast<unsigned>(id) - static_cast<unsigned>(Amp1);
+            amp[index] = _mm_set1_ps(val);
+            break;
+
+         case Feedback:
+            feedback = _mm_set1_ps(val);
             break;
       }
    }
 
-   enum IDs : PluginOption::ID { Echo, Amp };
+   enum IDs : PluginOption::ID {
+      Echo1, Echo2, Echo3, Echo4,
+      Amp1, Amp2, Amp3, Amp4,
+      Feedback
+   };
 
    unsigned Process(const float *input, unsigned frames)
    {
       unsigned frames_out = 0;
       float *buffer_out = buffer;
 
-      __m128 amp = _mm_set1_ps(this->amp);
+      __m128 amp[4] = {
+         this->amp[0],
+         this->amp[1],
+         this->amp[2],
+         this->amp[3],
+      };
+
+      __m128 feedback = this->feedback;
+
+#define DO_FILTER() \
+      __m128 result[4]; \
+      __m128 echo_[4]; \
+      for (unsigned i = 0; i < 4; i++) \
+      { \
+         echo_[i] = _mm_load_ps(echo_buffer[i] + ptr[i]); \
+         result[i] = _mm_mul_ps(amp[i], echo_[i]); \
+      } \
+      __m128 final_result = _mm_add_ps(_mm_add_ps(result[0], result[1]), _mm_add_ps(result[2], result[3])); \
+      __m128 feedback_result = _mm_mul_ps(feedback, final_result); \
+      final_result = _mm_add_ps(reg, final_result); \
+      feedback_result = _mm_add_ps(reg, feedback_result); \
+      for (unsigned i = 0; i < 4; i++) \
+         _mm_store_ps(echo_buffer[i] + ptr[i], feedback_result); \
+      _mm_store_ps(buffer_out, final_result); \
+      for (unsigned i = 0; i < 4; i++) \
+         ptr[i] = (ptr[i] + 4) % buf_size[i]
+
 
       // Fill up scratch buffer and flush.
       if (scratch_ptr)
@@ -96,14 +173,11 @@ struct EchoFilter : public AbstractPlugin
          scratch_ptr = 0;
 
          __m128 reg = _mm_load_ps(scratch_buf);
-         __m128 echo_ = _mm_load_ps(echo_buffer + ptr);
-         __m128 result = _mm_add_ps(reg, _mm_mul_ps(amp, echo_));
-         _mm_store_ps(echo_buffer + ptr, result);
-         _mm_store_ps(buffer_out, result);
 
+         DO_FILTER();
+
+         frames_out += 2;
          buffer_out += 4;
-         ptr = (ptr + 4) % buf_size;
-         frames_out++;
       }
 
       // Main processing.
@@ -111,12 +185,7 @@ struct EchoFilter : public AbstractPlugin
       for (i = 0; (i + 4) <= (frames * 2); i += 4, input += 4, buffer_out += 4, frames_out += 2)
       {
          __m128 reg = _mm_loadu_ps(input); // Might not be aligned.
-         __m128 echo_ = _mm_load_ps(echo_buffer + ptr);
-         __m128 result = _mm_add_ps(reg, _mm_mul_ps(amp, echo_));
-         _mm_store_ps(echo_buffer + ptr, result);
-         _mm_store_ps(buffer_out, result);
-
-         ptr = (ptr + 4) % buf_size;
+         DO_FILTER();
       }
 
       // Flush rest to scratch buffer.
@@ -146,8 +215,9 @@ static void *dsp_init(const ssnes_dsp_info_t *info)
    EchoFilter *echo = new EchoFilter;
 
    echo->input_rate = info->input_rate;
-   echo->buf_size = ECHO_MS * (info->input_rate * 2) / 1000;
-   echo->amp = AMP;
+
+   for (unsigned i = 0; i < 4; i++)
+      echo->buf_size[i] = ECHO_MS * (info->input_rate * 2) / 1000;
 
    fprintf(stderr, "[Echo] loaded!\n");
 
