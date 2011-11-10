@@ -10,6 +10,10 @@
 #include <type_traits>
 #include "abstract_plugin.hpp"
 
+#ifdef PERF_TEST
+#include "timer.hpp"
+#endif
+
 #include <emmintrin.h>
 
 // 4 source echo.
@@ -32,6 +36,10 @@ struct EchoFilter : public AbstractPlugin
    __m128 amp[4] ALIGNED;
    __m128 feedback ALIGNED;
    float input_rate;
+
+#ifdef PERF_TEST
+   Timer timer;
+#endif
 
    EchoFilter()
    {
@@ -163,6 +171,7 @@ struct EchoFilter : public AbstractPlugin
       // Fill up scratch buffer and flush.
       if (scratch_ptr)
       {
+         std::cerr << "Scratch ptr is active!!! :O" << std::endl;
          for (unsigned i = scratch_ptr; i < 4; i += 2)
          {
             scratch_buf[i] = *input++;
@@ -201,7 +210,15 @@ static void dsp_process(void *data, ssnes_dsp_output_t *output,
 {
    EchoFilter *echo = reinterpret_cast<EchoFilter*>(data);
    output->samples = echo->buffer;
+
+#ifdef PERF_TEST
+   echo->timer.start();
+#endif
    output->frames = echo->Process(input->samples, input->frames);
+#ifdef PERF_TEST
+   echo->timer.stop(input->frames);
+#endif
+
    output->should_resample = SSNES_TRUE;
 }
 
