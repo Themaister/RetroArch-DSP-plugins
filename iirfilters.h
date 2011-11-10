@@ -3,8 +3,6 @@
 
 #include <stddef.h>
 
-#undef __SSE2__
-
 #ifdef __SSE2__
 #include <emmintrin.h>
 #endif
