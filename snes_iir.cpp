@@ -171,7 +171,11 @@ const ssnes_dsp_plugin_t dsp_plug = {
 	dsp_free,
 	SSNES_DSP_API_VERSION,
 	dsp_config,
+#ifdef __SSE2__
+	"IIR filter set (SSE2)"
+#else
 	"IIR filter set"
+#endif
 };
 
 
