@@ -78,13 +78,8 @@ PluginSettings::PluginSettings(std::shared_ptr<Plugin> &plug, QWidget *parent)
    connect(remove_btn, SIGNAL(clicked()), this, SLOT(remove()));
    vbox->addLayout(hbox);
 
-   if (plugin->layout() == AbstractPlugin::Layout::Vertical)
-      options = new QVBoxLayout;
-   else
-      options = new QHBoxLayout;
-
+   options = new QBoxLayout(QBoxLayout::TopToBottom);
    update_controls();
-
    vbox->addLayout(options);
 
    setLayout(vbox);
@@ -139,6 +134,9 @@ void PluginSettings::remove()
 
 void PluginSettings::update_controls()
 {
+   options->setDirection(plugin->layout() == AbstractPlugin::Layout::Vertical ?
+         QBoxLayout::TopToBottom : QBoxLayout::LeftToRight);
+
    if (tab_widget)
       tab_widget->setTabText(tab_widget->indexOf(this), QString::fromUtf8(plugin->ident().c_str()));
 
