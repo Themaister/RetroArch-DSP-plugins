@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 
+#undef __SSE2__
+
 #ifdef __SSE2__
 #include <emmintrin.h>
 #endif
@@ -27,9 +29,10 @@ class IIRFilter
 {
 private:                           
 #ifdef __SSE2__
-   __m128 fir_coeff;
+   __m128 fir_coeff[2];
+   __m128 fir_buf[2];
+
    __m128 iir_coeff;
-   __m128 fir_buf;
    __m128 iir_buf;
 #endif
 
@@ -45,7 +48,7 @@ public:
 	float Process(float samp);
 
 #ifdef __SSE2__
-   void ProcessBatch(float *out, const float *in, unsigned frames, unsigned interleave);
+   void ProcessBatch(float *out, const float *in, unsigned frames);
 #endif
 
 	void setFrequency(float val);

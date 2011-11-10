@@ -5,44 +5,38 @@
 class Timer
 {
    public:
-      Timer() : frames(0), cycles(0) {}
+      Timer() : frames(0), time(0.0) {}
       void start()
       {
-         last_cycles = current_time();
+         last_time = current_time();
       }
 
       void stop(unsigned processed)
       {
-         cycles += current_time() - last_cycles;
+         time += current_time() - last_time;
          frames += processed;
          frames_cnt += processed;
 
          if (frames_cnt > 100000)
          {
-            std::cerr << "Cycles / frame => " << cycles / frames << std::endl;
+            std::cerr << "frame / s => " << frames / time << std::endl;
             frames_cnt = 0;
          }
       }
 
    private:
-      uint64_t current_time() // Unsafe, but good enough for our purposes ... ;)
+      double current_time()
       {
-         uint32_t lo, hi;
-         asm volatile (
-               "xorl %%eax, %%eax\n\t"
-               "cpuid\n\t"
-               ::: "%eax", "%ebx", "%ecx", "%edx"); // Serialize pipelines.
-
-         asm volatile ( "rdtsc\n\t" : "=a"(lo), "=d"(hi) );
-         return ((uint64_t)hi << 32) | lo;
+         struct timespec tv;
+         clock_gettime(CLOCK_MONOTONIC, &tv);
+         return tv.tv_sec + tv.tv_nsec / 1000000000.0;
       }
 
       unsigned frames;
       unsigned frames_cnt;
-      uint64_t cycles;
-      double last_cycles;
+      double time;
+      double last_time;
 };
-
 
 #endif
 
