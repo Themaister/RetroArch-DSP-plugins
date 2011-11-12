@@ -3,6 +3,7 @@ TARGETS = snes_reverb.dll snes_wah.dll snes_phaser.dll snes_iir.dll snes_echo.dl
 CXXFLAGS += -O3 -Wall -pedantic -std=gnu++0x
 CFLAGS += -O3 -g -Wall -pedantic -std=gnu99
 CXX = g++
+CC = gcc
 
 HEADERS = $(wildcard *.h) $(wildcard *.hpp) $(wildcard */*.h) $(wildcard */*.hpp)
 
