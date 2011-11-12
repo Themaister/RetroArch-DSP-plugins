@@ -232,8 +232,8 @@ float IIRFilter::Process(float samp)
 #ifdef __SSE2__
 void IIRFilter::ProcessBatch(float *out, const float *in, unsigned frames, unsigned interleave)
 {
-   __m128 fir_coeffs = this->fir_coeffs;
-   __m128 iir_coeffs = this->iir_coeffs;
+   __m128 fir_coeff = this->fir_coeff;
+   __m128 iir_coeff = this->iir_coeff;
    __m128 fir_buf = this->fir_buf; 
    __m128 iir_buf = this->iir_buf; 
 
@@ -245,13 +245,16 @@ void IIRFilter::ProcessBatch(float *out, const float *in, unsigned frames, unsig
 
    for (unsigned i = 0; i < frames; in += interleave, i++, out += interleave)
    {
-      fir_buf = _mm_or_ps((__m128)_mm_slli_si128((__m128i)fir_buf, 4), input);
+      fir_buf = _mm_or_ps((__m128)_mm_slli_si128((__m128i)fir_buf, 4), _mm_load_ss(in));
       u.vec = _mm_add_ps(_mm_mul_ps(fir_buf, fir_coeff), _mm_mul_ps(iir_buf, iir_coeff));
 
       float result = u.f[0] + u.f[1] + u.f[2];
       iir_buf = _mm_or_ps((__m128)_mm_slli_si128((__m128i)iir_buf, 4), _mm_set_ss(result));
       *out = result;
    }
+
+   this->fir_buf = fir_buf;
+   this->iir_buf = iir_buf;
 }
 #endif
 
