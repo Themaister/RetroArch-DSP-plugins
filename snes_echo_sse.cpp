@@ -9,6 +9,7 @@
 #include <iterator>
 #include <type_traits>
 #include "abstract_plugin.hpp"
+#include "utils.hpp"
 
 #ifdef PERF_TEST
 #include "timer.hpp"
@@ -21,7 +22,7 @@
 #define ALIGNED __attribute__((aligned(16))) // Should use C++11 alignas(), but doesn't seem to work :(
 
 #define ECHO_MS 150
-#define AMP 0.2
+#define AMP 0.0
 
 struct EchoFilter : public AbstractPlugin
 {
@@ -43,16 +44,16 @@ struct EchoFilter : public AbstractPlugin
 
    EchoFilter()
    {
-      std::fill(ptr, ptr + 4, 0.0);
-      std::fill(amp, amp + 4, _mm_set1_ps(AMP));
+      Utils::set_all(ptr, 0.0f);
+      Utils::set_all(amp, _mm_set1_ps(AMP));
 
       scratch_ptr = 0;
-      feedback = _mm_set1_ps(0.0);
+      feedback = _mm_set1_ps(0.0f);
 
       input_rate = 32000.0;
-      std::fill(&echo_buffer[0][0], &echo_buffer[4][0], 0.0);
-      std::fill(buffer, buffer + 4096, 0.0);
-      std::fill(scratch_buf, scratch_buf + 4, 0.0);
+      Utils::set_all(echo_buffer, 0.0f);
+      Utils::set_all(buffer, 0.0f);
+      Utils::set_all(scratch_buf, 0.0f);
 
       PluginOption opt = {0};
       opt.type = PluginOption::Type::Double;
