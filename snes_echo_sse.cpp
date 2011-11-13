@@ -43,16 +43,16 @@ struct EchoFilter : public AbstractPlugin
 
    EchoFilter()
    {
-      std::fill(std::begin(ptr), std::end(ptr), 0.0);
-      std::fill(std::begin(amp), std::end(amp), _mm_set1_ps(AMP));
+      std::fill(ptr, ptr + 4, 0.0);
+      std::fill(amp, amp + 4, _mm_set1_ps(AMP));
 
       scratch_ptr = 0;
       feedback = _mm_set1_ps(0.0);
 
       input_rate = 32000.0;
       std::fill(&echo_buffer[0][0], &echo_buffer[4][0], 0.0);
-      std::fill(std::begin(buffer), std::end(buffer), 0.0);
-      std::fill(std::begin(scratch_buf), std::end(scratch_buf), 0.0);
+      std::fill(buffer, buffer + 4096, 0.0);
+      std::fill(scratch_buf, scratch_buf + 4, 0.0);
 
       PluginOption opt = {0};
       opt.type = PluginOption::Type::Double;
