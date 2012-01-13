@@ -32,6 +32,7 @@ class MetaDSP
       void log_options() const;
 
 #ifdef META_GUI
+      WaveTransferInterface wave_iface;
       ThreadWindow window;
 #endif
 };

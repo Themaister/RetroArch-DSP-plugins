@@ -34,7 +34,7 @@ MetaDSP::MetaDSP(float input_rate, float output_rate) : sample_rate(input_rate)
    log_options();
 
 #ifdef META_GUI
-   window.start(plugins);
+   window.start(plugins, &wave_iface);
 #endif
 }
 
@@ -96,7 +96,9 @@ void MetaDSP::process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in)
    input[i].frames = output[i].frames;
    input[i].samples = output[i].samples;
    resampler_plugin->process(out, &input[i]);
+
 #ifdef META_GUI
+   wave_iface.push(out->samples, out->frames);
    Global::unlock();
 #endif
 }

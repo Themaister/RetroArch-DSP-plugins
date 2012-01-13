@@ -4,6 +4,8 @@
 #define MAIN_WINDOW_HPP__
 
 #include <QWidget>
+#include <QVector>
+#include <QFile>
 #include <memory>
 
 #ifdef META_THREADED
@@ -105,12 +107,54 @@ class PluginSettings : public QWidget
       void update_controls();
 };
 
+class WaveTransferInterface : public QObject
+{
+   Q_OBJECT
+
+   public:
+      WaveTransferInterface(QObject *parent = 0);
+
+      void push(const float *samples, size_t frames);
+
+   signals:
+      void data(const float *samples, size_t frames);
+};
+
+class WaveRecorder : public QWidget
+{
+   Q_OBJECT
+
+   public:
+      WaveRecorder(QWidget *parent = 0);
+      ~WaveRecorder();
+
+   public slots:
+      void data(const float *data, size_t frames);
+
+   private slots:
+      void find_file();
+      void start();
+      void stop();
+
+   private:
+      bool is_recording;
+      QVector<int16_t> conv_buffer;
+      QFile file;
+      QLabel *progress;
+      QLineEdit *path;
+
+      void flush_record();
+      void update_size();
+};
+
 class ThreadWindowImpl : public QWidget
 {
    Q_OBJECT
 
    public:
-      ThreadWindowImpl(std::shared_ptr<Plugin> *plugs, QWidget *parent = 0);
+      ThreadWindowImpl(std::shared_ptr<Plugin> *plugs,
+            WaveTransferInterface *wave_iface,
+            QWidget *parent = 0);
 
    private:
       std::shared_ptr<Plugin> *plugins;
@@ -121,7 +165,7 @@ class ThreadWindowImpl : public QWidget
 class MetaApplication
 {
    public:
-      MetaApplication(std::shared_ptr<Plugin> *plugs);
+      MetaApplication(std::shared_ptr<Plugin> *plugs, WaveTransferInterface *wave_iface);
       ~MetaApplication();
       void show();
 

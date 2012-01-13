@@ -14,7 +14,9 @@
 #include <QDir>
 #include <QVariant>
 
-ThreadWindowImpl::ThreadWindowImpl(std::shared_ptr<Plugin> *plugs, QWidget *parent)
+ThreadWindowImpl::ThreadWindowImpl(std::shared_ptr<Plugin> *plugs,
+      WaveTransferInterface *wave_iface,
+      QWidget *parent)
    : QWidget(parent), plugins(plugs)
 {
    setAttribute(Qt::WA_QuitOnClose, false);
@@ -27,6 +29,12 @@ ThreadWindowImpl::ThreadWindowImpl(std::shared_ptr<Plugin> *plugs, QWidget *pare
 
    vbox->addWidget(tab);
 
+   vbox->addWidget(new QLabel("WAV recording:", this));
+   WaveRecorder *recorder = new WaveRecorder(this);
+   connect(wave_iface, SIGNAL(data(const float*, size_t)), recorder, SLOT(data(const float*, size_t)));
+
+   vbox->addWidget(recorder);
+
    setWindowTitle("SSNES Meta DSP");
    setLayout(vbox);
 }
@@ -36,7 +44,8 @@ void MetaApplication::show()
    impl->show();
 }
 
-MetaApplication::MetaApplication(std::shared_ptr<Plugin> *plugs)
+MetaApplication::MetaApplication(std::shared_ptr<Plugin> *plugs,
+      WaveTransferInterface *wave_iface)
    : plugins(plugs)
 {
    static int argc = 1;
@@ -44,7 +53,7 @@ MetaApplication::MetaApplication(std::shared_ptr<Plugin> *plugs)
    static char *argv[] = { const_cast<char*>(appname), NULL };
 
    app = new QApplication(argc, argv);
-   impl = new ThreadWindowImpl(plugins);
+   impl = new ThreadWindowImpl(plugins, wave_iface);
 }
 
 MetaApplication::~MetaApplication()
@@ -307,7 +316,6 @@ void PluginSettingSelection::indexChanged(int index)
    plugin->set_option_selection(id, optid);
    Global::unlock();
 }
-
 
 namespace Global
 {

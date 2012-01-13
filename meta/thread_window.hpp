@@ -11,9 +11,9 @@
 class ThreadWindow
 {
    public:
-      void start(std::shared_ptr<Plugin> *plugs)
+      void start(std::shared_ptr<Plugin> *plugs, WaveTransferInterface *wave_iface)
       {
-         app = new MetaApplication(plugs);
+         app = new MetaApplication(plugs, wave_iface);
       }
 
       void show()

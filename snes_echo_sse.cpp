@@ -172,7 +172,6 @@ struct EchoFilter : public AbstractPlugin
       // Fill up scratch buffer and flush.
       if (scratch_ptr)
       {
-         std::cerr << "Scratch ptr is active!!! :O" << std::endl;
          for (unsigned i = scratch_ptr; i < 4; i += 2)
          {
             scratch_buf[i] = *input++;
