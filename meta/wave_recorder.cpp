@@ -1,5 +1,6 @@
 #include "main_window.moc.hpp"
 #include "utils.h"
+#include "../inireader.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -7,15 +8,16 @@
 #include <QFile>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QRegExp>
 
 // Will only work correctly on little-endian systems for now.
 
-WaveRecorder::WaveRecorder(QWidget *parent) : QWidget(parent), is_recording(false)
+WaveRecorder::WaveRecorder(QWidget *parent)
+   : QWidget(parent), is_recording(false), is_encoding(false)
 {
    QVBoxLayout *vbox = new QVBoxLayout;
 
    QHBoxLayout *path_hbox = new QHBoxLayout;
-
    path = new QLineEdit(this);
    path->setReadOnly(true);
 
@@ -37,12 +39,25 @@ WaveRecorder::WaveRecorder(QWidget *parent) : QWidget(parent), is_recording(fals
 
    control_hbox->addWidget(start_btn);
    control_hbox->addWidget(stop_btn);
+   control_hbox->addSpacing(5);
 
    progress = new QLabel("Not recording ...", this);
    control_hbox->addWidget(progress);
 
    vbox->addLayout(path_hbox);
    vbox->addLayout(control_hbox);
+
+   vbox->addSpacing(5);
+   vbox->addWidget(new QLabel("External encoding process:\n"
+            "\tTakes the .wav from stdin.\n"
+            "\t%1 in string is replaced with file path (minus .wav extension).\n"
+            "\tWill not encode if string is empty.", this));
+
+   command = new QLineEdit(this);
+   vbox->addWidget(command);
+
+   ConfigFile conf("ssnes_effect.cfg");
+   command->setText(conf.get_string("meta_encoder_command", "").c_str());
 
    setLayout(vbox);
 }
@@ -51,6 +66,10 @@ WaveRecorder::~WaveRecorder()
 {
    stop();
    update_size();
+
+   ConfigFile conf("ssnes_effect.cfg");
+   conf.set_string("meta_encoder_command", command->text().toUtf8().constData());
+   conf.write("ssnes_effect.cfg");
 }
 
 void WaveRecorder::data(const float *data, size_t frames)
@@ -61,7 +80,15 @@ void WaveRecorder::data(const float *data, size_t frames)
          conv_buffer.reserve(frames * 2);
 
       audio_convert_float_to_s16(conv_buffer.data(), data, frames * 2);
-      file.write((const char*)conv_buffer.constData(), frames * 2 * sizeof(int16_t));
+
+      file.write((const char*)conv_buffer.constData(),
+            frames * 2 * sizeof(int16_t));
+
+      if (is_encoding)
+      {
+         process.write((const char*)conv_buffer.constData(),
+               frames * 2 * sizeof(int16_t));
+      }
    }
 
    update_size();
@@ -77,7 +104,11 @@ void WaveRecorder::update_size()
       uint64_t minutes = seconds / 60;
       uint64_t hours = minutes / 60;
       
-      QString str = QString("%1:%2:%3").arg(hours).arg(minutes, 2, 10, QChar('0')).arg(seconds, 2, 10, QChar('0'));
+      QString str = QString("%1:%2:%3")
+         .arg(hours)
+         .arg(minutes, 2, 10, QChar('0'))
+         .arg(seconds, 2, 10, QChar('0'));
+
       progress->setText(str);
    }
    else
@@ -91,7 +122,8 @@ void WaveRecorder::start()
 
    if (file.fileName().isEmpty())
    {
-      QMessageBox::warning(this, "Recorder error!", "Please set path for WAV dump.");
+      QMessageBox::warning(this, "Recorder error!",
+            "Please set path for WAV dump.");
       return;
    }
 
@@ -105,6 +137,26 @@ void WaveRecorder::start()
       return;
    }
 
+   if (!command->text().isEmpty())
+   {
+      QString pathname = file.fileName();
+      pathname.remove(QRegExp(".wav$"));
+      pathname.prepend("\"");
+      pathname += "\"";
+
+      QString cmd = command->text().arg(pathname);
+      process.start(cmd);
+      bool ret = process.waitForStarted(5000);
+      if (ret)
+         is_encoding = true;
+      else
+      {
+         QMessageBox::warning(this, "Encoder error!",
+               "Unable to start external decoding process.\n"
+               "Will continue without encoding.");
+      }
+   }
+
    uint32_t rate = Global::get_dsp_info().output_rate;
    uint32_t byte_rate = rate * 2 * sizeof(int16_t);
 
@@ -116,8 +168,14 @@ void WaveRecorder::start()
       16, 0, 0, 0,            // SubChunk1Size
       1, 0,                   // PCM
       2, 0,                   // Stereo
-      (uint8_t)(rate >> 0), (uint8_t)(rate >> 8), (uint8_t)(rate >> 16), (uint8_t)(rate >> 24), // Sample rate
-      (uint8_t)(byte_rate >> 0), (uint8_t)(byte_rate >> 8), (uint8_t)(byte_rate >> 16), (uint8_t)(byte_rate >> 24),
+      (uint8_t)(rate >> 0),
+      (uint8_t)(rate >> 8),
+      (uint8_t)(rate >> 16),
+      (uint8_t)(rate >> 24),
+      (uint8_t)(byte_rate >> 0),
+      (uint8_t)(byte_rate >> 8),
+      (uint8_t)(byte_rate >> 16),
+      (uint8_t)(byte_rate >> 24),
       2 * sizeof(int16_t), 0,
       16, 0,                  // 16-bit
       0x64, 0x61, 0x74, 0x61, // data
@@ -125,6 +183,9 @@ void WaveRecorder::start()
    };
 
    file.write((const char*)wave_header, sizeof(wave_header));
+   if (is_encoding)
+      process.write((const char*)wave_header, sizeof(wave_header));
+
    is_recording = true;
 }
 
@@ -132,6 +193,14 @@ void WaveRecorder::stop()
 {
    if (is_recording)
       flush_record();
+
+   if (is_encoding)
+   {
+      process.closeWriteChannel();
+      process.waitForFinished(5000);
+      process.close();
+      is_encoding = false;
+   }
 }
 
 void WaveRecorder::find_file()

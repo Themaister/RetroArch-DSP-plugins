@@ -6,6 +6,7 @@
 #include <QWidget>
 #include <QVector>
 #include <QFile>
+#include <QProcess>
 #include <memory>
 
 #ifdef META_THREADED
@@ -138,10 +139,13 @@ class WaveRecorder : public QWidget
 
    private:
       bool is_recording;
+      bool is_encoding;
       QVector<int16_t> conv_buffer;
       QFile file;
+      QProcess process;
       QLabel *progress;
       QLineEdit *path;
+      QLineEdit *command;
 
       void flush_record();
       void update_size();
