@@ -107,10 +107,10 @@ struct PlugIIR : public AbstractPlugin
 
 static void* dsp_init(const ssnes_dsp_info_t *info)
 {
-   CIniReader iniReader("ssnes_effect.cfg");
-   int type = iniReader.ReadInteger("iir", "type", 0); 
-   float freq = iniReader.ReadFloat("iir","filter_frequency", 1024.0);
-   float gain = iniReader.ReadFloat("iir","filter_gain", 0.0);
+   ConfigFile cfg("ssnes_effect.cfg");
+   int type = cfg.get_int("iir_type", 0); 
+   float freq = cfg.get_float("iir_filter_frequency", 1024.0);
+   float gain = cfg.get_float("iir_filter_gain", 0.0);
 
    PlugIIR *iir = new PlugIIR(info->input_rate, freq, gain);
    iir->iir_l.setFrequency(freq);

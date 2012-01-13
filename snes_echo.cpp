@@ -53,10 +53,10 @@ struct PlugEcho : public AbstractPlugin
 
 static void* dsp_init(const ssnes_dsp_info_t *info)
 {
-   CIniReader iniReader("ssnes_effect.cfg");
+   ConfigFile cfg("ssnes_effect.cfg");
 
-   int amp = iniReader.ReadInteger("echo", "amplification", 128); 
-   int delay = iniReader.ReadInteger("echo", "delay", 200);
+   int amp = cfg.get_int("echo_amplification", 128); 
+   int delay = cfg.get_int("echo_delay", 200);
 
    PlugEcho *echo = new PlugEcho(delay, amp);
    echo->echo_l.SetSampleRate(info->input_rate);

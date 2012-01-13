@@ -5,33 +5,32 @@
 #include <windows.h>
 #endif
 
-CIniReader::CIniReader(const char* szFileName)
+ConfigFile::ConfigFile(const std::string &filename)
 {
-   std::string base = GetBaseDir(szFileName);
+   auto base = GetBaseDir();
    base += "/";
 #ifndef _WIN32
    base += "."; // Hidden file in $HOME
 #endif
-   base += szFileName;
+   base += filename;
    conf = config_file_new(base.c_str());
    if (!conf)
       conf = config_file_new(NULL);
 }
 
-CIniReader::~CIniReader()
+ConfigFile::~ConfigFile()
 {
    if (conf)
       config_file_free(conf);
 }
 
-std::string CIniReader::GetBaseDir(const char *filename)
+std::string ConfigFile::GetBaseDir()
 {
 #ifdef _WIN32
-   char buf[256];
+   char buf[MAX_PATH];
    GetCurrentDirectory(sizeof(buf), buf);
    return buf;
 #else
-   (void)filename;
    const char *home = getenv("HOME");
    if (home)
       return home;
@@ -40,47 +39,35 @@ std::string CIniReader::GetBaseDir(const char *filename)
 #endif
 }
 
-int CIniReader::ReadInteger(const char* szSection, const char* szKey, int iDefaultValue)
+int ConfigFile::get_int(const std::string &key, int def_val)
 {
-   std::string key(szSection);
-   key += "_";
-   key += szKey;
    int res;
    if (config_get_int(conf, key.c_str(), &res))
       return res;
    else
-      return iDefaultValue;
+      return def_val;
 }
 
-float CIniReader::ReadFloat(const char* szSection, const char* szKey, float fltDefaultValue)
+float ConfigFile::get_float(const std::string &key, float def_val)
 {
-   std::string key(szSection);
-   key += "_";
-   key += szKey;
    double res;
    if (config_get_double(conf, key.c_str(), &res))
-      return (float)res;
+      return static_cast<float>(res);
    else
-      return fltDefaultValue;
+      return def_val;
 }
 
-bool CIniReader::ReadBoolean(const char* szSection, const char* szKey, bool bolDefaultValue)
+bool ConfigFile::get_bool(const std::string &key, bool def_val)
 {
-   std::string key(szSection);
-   key += "_";
-   key += szKey;
    bool res;
    if (config_get_bool(conf, key.c_str(), &res))
       return res;
    else
-      return bolDefaultValue;
+      return def_val;
 }
 
-std::string CIniReader::ReadString(const char *szSection, const char *szKey, const char *szDefaultValue)
+std::string ConfigFile::get_string(const std::string &key, const std::string &def_val)
 {
-   std::string key(szSection);
-   key += "_";
-   key += szKey;
    char *str;
    if (config_get_string(conf, key.c_str(), &str))
    {
@@ -89,5 +76,24 @@ std::string CIniReader::ReadString(const char *szSection, const char *szKey, con
       return ret;
    }
    else
-      return szDefaultValue;
+      return def_val;
 }
+
+ConfigFile& ConfigFile::set_string(const std::string &key, const std::string &val)
+{
+   config_set_string(conf, key.c_str(), val.c_str());
+   return *this;
+}
+
+void ConfigFile::write(const std::string &filename)
+{
+   auto base = GetBaseDir();
+   base += "/";
+#ifndef _WIN32
+   base += "."; // Hidden file in $HOME
+#endif
+   base += filename;
+
+   config_file_write(conf, base.c_str());
+}
+

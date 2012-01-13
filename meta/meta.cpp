@@ -2,43 +2,49 @@
 #include "../inireader.h"
 #include <iostream>
 
+static const char *plug_names[MetaDSP::max_plugs] = {
+   "meta_plugin0",
+   "meta_plugin1",
+   "meta_plugin2",
+   "meta_plugin3",
+   "meta_plugin4",
+   "meta_plugin5",
+   "meta_plugin6",
+   "meta_plugin7",
+};
+
 MetaDSP::MetaDSP(float input_rate, float output_rate) : sample_rate(input_rate)
 {
    ssnes_dsp_info_t info = { sample_rate, sample_rate };
    Global::set_dsp_info(info);
-   CIniReader cfg("ssnes_effect.cfg");
-   auto plug0 = cfg.ReadString("meta", "plugin0", "");
-   auto plug1 = cfg.ReadString("meta", "plugin1", "");
-   auto plug2 = cfg.ReadString("meta", "plugin2", "");
-   auto plug3 = cfg.ReadString("meta", "plugin3", "");
-   auto plug4 = cfg.ReadString("meta", "plugin4", "");
-   auto plug5 = cfg.ReadString("meta", "plugin5", "");
-   auto plug6 = cfg.ReadString("meta", "plugin6", "");
-   auto plug7 = cfg.ReadString("meta", "plugin7", "");
-   auto resamp_plug = cfg.ReadString("meta", "resampler_plugin", "");
-   plugins[0] = std::make_shared<Plugin>(&info, plug0.c_str());
-   plugins[1] = std::make_shared<Plugin>(&info, plug1.c_str());
-   plugins[2] = std::make_shared<Plugin>(&info, plug2.c_str());
-   plugins[3] = std::make_shared<Plugin>(&info, plug3.c_str());
-   plugins[4] = std::make_shared<Plugin>(&info, plug4.c_str());
-   plugins[5] = std::make_shared<Plugin>(&info, plug5.c_str());
-   plugins[6] = std::make_shared<Plugin>(&info, plug6.c_str());
-   plugins[7] = std::make_shared<Plugin>(&info, plug7.c_str());
+   ConfigFile cfg("ssnes_effect.cfg");
 
    for (unsigned i = 0; i < max_plugs; i++)
    {
+      plugins[i] = std::make_shared<Plugin>(&info, cfg.get_string(plug_names[i], "").c_str());
       if (plugins[i]->is_resampler())
          plugins[i] = std::make_shared<Plugin>();
    }
 
    info.output_rate = output_rate;
-   resampler_plugin = std::make_shared<Plugin>(&info, resamp_plug.c_str());
+
+   resampler_plugin = std::make_shared<Plugin>(&info,
+         cfg.get_string("meta_resampler_plugin", "").c_str());
 
    log_options();
 
 #ifdef META_GUI
    window.start(plugins);
 #endif
+}
+
+MetaDSP::~MetaDSP()
+{
+   ConfigFile cfg("ssnes_effect.cfg");
+   for (unsigned i = 0; i < max_plugs; i++)
+      cfg.set_string(plug_names[i], plugins[i]->path());
+
+   cfg.write("ssnes_effect.cfg");
 }
 
 void MetaDSP::log_options() const

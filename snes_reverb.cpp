@@ -90,12 +90,12 @@ struct PlugReverb : public AbstractPlugin
 
 static void* dsp_init(const ssnes_dsp_info_t *)
 {
-   CIniReader iniReader("ssnes_effect.cfg");
-   float drytime = iniReader.ReadFloat("reverb", "dry_time", 0.43); 
-   float wettime = iniReader.ReadFloat("reverb","wet_time",0.57);
-   float damping = iniReader.ReadFloat("reverb","damping",0.45);
-   float roomwidth = iniReader.ReadFloat("reverb","room_width",0.56);
-   float roomsize = iniReader.ReadFloat("reverb","room_size",0.56);
+   ConfigFile cfg("ssnes_effect.cfg");
+   float drytime = cfg.get_float("reverb_dry_time", 0.43); 
+   float wettime = cfg.get_float("reverb_wet_time", 0.57);
+   float damping = cfg.get_float("reverb_damping", 0.45);
+   float roomwidth = cfg.get_float("reverb_room_width", 0.56);
+   float roomsize = cfg.get_float("reverb_room_size", 0.56);
 
    PlugReverb *rev = new PlugReverb(drytime, wettime, damping, roomwidth, roomsize);
    rev->rev_l.setdamp(damping);
