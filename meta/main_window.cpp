@@ -28,11 +28,11 @@ ThreadWindowImpl::ThreadWindowImpl(std::shared_ptr<Plugin> *plugs,
       tab->addTab(new PluginSettings(plugins[i], tab), QString::fromUtf8(plugins[i]->ident().c_str()));
 
    vbox->addWidget(tab);
+   vbox->addSpacing(10);
 
    vbox->addWidget(new QLabel("WAV recording:", this));
    WaveRecorder *recorder = new WaveRecorder(this);
    connect(wave_iface, SIGNAL(data(const float*, size_t)), recorder, SLOT(data(const float*, size_t)));
-
    vbox->addWidget(recorder);
 
    setWindowTitle("SSNES Meta DSP");

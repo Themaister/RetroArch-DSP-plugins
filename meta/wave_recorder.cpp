@@ -77,12 +77,7 @@ void WaveRecorder::update_size()
       uint64_t minutes = seconds / 60;
       uint64_t hours = minutes / 60;
       
-      QString str;
-      str += QString::number(hours);
-      str += ":";
-      str += QString::number(minutes);
-      str += ":";
-      str += QString::number(seconds);
+      QString str = QString("%1:%2:%3").arg(hours).arg(minutes, 2, 10, QChar('0')).arg(seconds, 2, 10, QChar('0'));
       progress->setText(str);
    }
    else
@@ -100,9 +95,13 @@ void WaveRecorder::start()
       return;
    }
 
-   if (file.open(QIODevice::WriteOnly) != QFile::NoError)
+   if (!file.open(QIODevice::WriteOnly))
    {
-      QMessageBox::warning(this, "Recorder error!", "Could not open file for writing!");
+      QString msg("Could not open file for writing: \"");
+      msg += file.fileName();
+      msg += "\"";
+
+      QMessageBox::warning(this, "Recorder error!", msg);
       return;
    }
 
@@ -126,6 +125,7 @@ void WaveRecorder::start()
    };
 
    file.write((const char*)wave_header, sizeof(wave_header));
+   is_recording = true;
 }
 
 void WaveRecorder::stop()
