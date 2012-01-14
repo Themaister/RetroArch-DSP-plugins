@@ -1,7 +1,7 @@
 TARGET := snes-meta-gui.so
 
 TEST_TARGET := meta-test
-TEST_TARGET_SRC := $(wildcard test/*.cpp)
+TEST_TARGET_SRC := $(wildcard test/*.cpp) utils.cpp
 TEST_TARGET_OBJ := $(TEST_TARGET_SRC:.cpp=.o)
 
 CXXFILES := $(wildcard *.cpp)

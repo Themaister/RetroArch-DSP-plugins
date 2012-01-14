@@ -211,7 +211,7 @@ PluginSettingDouble::PluginSettingDouble(std::shared_ptr<Plugin> &plug,
    connect(slider, SIGNAL(valueChanged(int)), this, SLOT(updated()));
    box->addWidget(slider);
 
-   value = new QLabel(QString::number(current, 'f', 1));
+   value = new QLabel(QString::number(current, 'f', 1), this);
    box->addWidget(value);
 
    val2slide(current);

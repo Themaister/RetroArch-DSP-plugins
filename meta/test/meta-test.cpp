@@ -1,4 +1,5 @@
 #include "../../ssnes_dsp.h"
+#include "../utils.h"
 #include <unistd.h>
 #include <sys/poll.h>
 #include <assert.h>
@@ -76,15 +77,7 @@ int main(int argc, char **argv)
 
       assert(output.frames <= 1024);
 
-      for (unsigned i = 0; i < output.frames * 2; i++)
-      {
-         float s = output.samples[i];
-         if (s > 1.0)
-            s = 1.0;
-         else if (s < -1.0)
-            s = -1.0;
-         buf[i] = (int16_t)(0x7fff * s);
-      }
+      audio_convert_float_to_s16(buf, output.samples, output.frames * 2);
 
       if (write(1, buf, sizeof(int16_t) * output.frames * 2) < (sizeof(int16_t) * output.frames * 2))
          break;
