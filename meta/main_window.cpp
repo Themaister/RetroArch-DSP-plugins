@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <iostream>
 
 #include <QVBoxLayout>

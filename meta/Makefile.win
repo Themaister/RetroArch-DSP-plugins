@@ -31,5 +31,6 @@ $(TARGET): $(OBJ)
 clean:
 	rm -f *.o
 	rm -f *.so
+	rm -f *.moc.cxx
 
 .PHONY: clean

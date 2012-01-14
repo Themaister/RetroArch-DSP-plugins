@@ -39,5 +39,6 @@ test: $(TEST_TARGET)
 clean:
 	rm -f *.o
 	rm -f *.so
+	rm -f *.moc.cxx
 
 .PHONY: clean
