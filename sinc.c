@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <assert.h>
+#include <malloc.h>
 
 #if __SSE__
 #include <xmmintrin.h>
@@ -20,22 +21,20 @@
 
 #define PHASES (1 << PHASE_BITS)
 #define PHASES_SHIFT (SUBPHASE_BITS)
-#define PHASES_MASK ((PHASES << 1) - 1)
 #define SUBPHASES (1 << SUBPHASE_BITS)
 #define SUBPHASES_SHIFT 0
 #define SUBPHASES_MASK ((1 << SUBPHASE_BITS) - 1)
 #define PHASES_WRAP (1 << (PHASE_BITS + SUBPHASE_BITS))
 
 #define SIDELOBES 8
-#define ALIGNED __attribute__((aligned))
 
 struct sinc_resampler
 {
-   float buffer[0x4000] ALIGNED;
-   float phase_table[PHASES + 1][SIDELOBES] ALIGNED;
-   float delta_table[PHASES + 1][SIDELOBES] ALIGNED;
-   float buffer_l[2 * SIDELOBES] ALIGNED;
-   float buffer_r[2 * SIDELOBES] ALIGNED;
+   float buffer[0x4000];
+   float phase_table[PHASES + 1][SIDELOBES];
+   float delta_table[PHASES + 1][SIDELOBES];
+   float buffer_l[2 * SIDELOBES];
+   float buffer_r[2 * SIDELOBES];
 
    uint32_t ratio;
    uint32_t time;
@@ -49,6 +48,19 @@ static inline double sinc(double val)
       return sin(val) / val;
 }
 
+static inline double blackman(double index)
+{
+   index *= 0.5;
+   index += 0.5;
+
+   double alpha = 0.16;
+   double a0 = (1.0 - alpha) / 2.0;
+   double a1 = 0.5;
+   double a2 = alpha / 2.0;
+
+   return a0 - a1 * cos(2.0 * M_PI * index) + a2 * cos(4.0 * M_PI * index);
+}
+
 static void init_sinc_table(struct sinc_resampler *resamp)
 {
    for (unsigned i = 0; i <= PHASES; i++)
@@ -56,7 +68,7 @@ static void init_sinc_table(struct sinc_resampler *resamp)
       for (unsigned j = 0; j < SIDELOBES; j++)
       {
          double sinc_phase = M_PI * ((double)i / PHASES + (double)j);
-         resamp->phase_table[i][j] = sinc(sinc_phase) * sinc(sinc_phase / SIDELOBES); // Kaiser window
+         resamp->phase_table[i][j] = sinc(sinc_phase) * blackman(sinc_phase / SIDELOBES);
       }
    }
 
@@ -246,9 +258,11 @@ static void *dsp_init(const ssnes_dsp_info_t *info)
    if (info->output_rate < info->input_rate)
       return NULL;
 
-   struct sinc_resampler *resamp = calloc(1, sizeof(*resamp));
+   struct sinc_resampler *resamp = memalign(16, sizeof(*resamp));
    if (!resamp)
       return NULL;
+
+   memset(resamp, 0, sizeof(*resamp));
 
    resamp->ratio = ((uint64_t)PHASES_WRAP * info->input_rate) / info->output_rate;
    resamp->time  = 0;
@@ -280,6 +294,7 @@ SSNES_API_EXPORT const ssnes_dsp_plugin_t* SSNES_API_CALLTYPE
 #ifdef DSP_TEST
 #include <stdio.h>
 #include "utils.h"
+#define ALIGNED __attribute__((aligned(16)))
 int main(void)
 {
    const ssnes_dsp_plugin_t *plug = ssnes_dsp_plugin_init();
