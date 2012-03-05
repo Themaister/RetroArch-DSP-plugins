@@ -10,7 +10,29 @@ ifeq ($(QTDIR),)
 endif
 
 QT_CXXFLAGS := -I$(QTDIR)/include/QtCore -I$(QTDIR)/include/QtGui -I$(QTDIR)/include/Qt -I$(QTDIR)/include
-QT_LIBS := -L$(QTDIR)/lib -lQtCore4 -lQtGui4
+
+ifeq ($(STATIC_QT), 1)
+   QT_LIBS := -L$(QTDIR)/lib \
+      -lmingw32 \
+      -lQtGui \
+      -lgdi32 \
+      -lcomdlg32 \
+      -loleaut32 \
+      -limm32 \
+      -lwinmm \
+      -lwinspool \
+      -lmsimg32 \
+      -lQtCore \
+      -lole32 \
+      -luuid \
+      -lws2_32 \
+      -ladvapi32 \
+      -lshell32 \
+      -luser32 \
+      -lkernel32
+else
+   QT_LIBS := -L$(QTDIR)/lib -lQtCore4 -lQtGui4
+endif
 
 INCLUDES := -I.
 
@@ -26,11 +48,10 @@ all: $(TARGET)
 	moc -o $@ $< $(INCLUDES)
 
 $(TARGET): $(OBJ)
-	$(CXX) -o $@ $(OBJ) $(QT_LIBS) -s -shared
+	$(CXX) -o $@ $(OBJ) $(QT_LIBS) -s -shared -Wl,-no-undefined -static-libgcc -static-libstdc++
 
 clean:
-	rm -f *.o
-	rm -f *.so
-	rm -f *.moc.cxx
+	rm -f $(TARGET)
+	rm -f $(OBJ)
 
 .PHONY: clean
