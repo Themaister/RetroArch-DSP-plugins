@@ -1,7 +1,7 @@
 TARGETS = snes_reverb.dll snes_wah.dll snes_phaser.dll snes_iir.dll snes_echo.dll snes_echo_sse.dll snes_volume.dll snes_eq.dll
 
-CXXFLAGS += -O3 -Wall -pedantic -std=gnu++0x
-CFLAGS += -O3 -g -Wall -pedantic -std=gnu99
+CXXFLAGS += -O3 -Wall -pedantic -std=gnu++0x -msse -msse2
+CFLAGS += -O3 -g -Wall -pedantic -std=gnu99 -msse -msse2
 CXX = g++
 CC = gcc
 
