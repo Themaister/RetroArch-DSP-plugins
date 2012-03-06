@@ -14,7 +14,7 @@
 class Library
 {
    public:
-      Library() : library_handle(NULL) {}
+      Library() : library_handle(nullptr) {}
 
       Library(const char *path)
       {
@@ -35,7 +35,7 @@ class Library
       {
          free_lib();
          library_handle = in.library_handle;
-         in.library_handle = NULL;
+         in.library_handle = nullptr;
          return *this;
       }
 
@@ -66,7 +66,7 @@ class Library
 #endif
          }
          else
-            return NULL;
+            return nullptr;
       }
 
    private:

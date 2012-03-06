@@ -51,7 +51,7 @@ MetaApplication::MetaApplication(std::shared_ptr<Plugin> *plugs,
 {
    static int argc = 1;
    static const char *appname = "ssnes-dsp";
-   static char *argv[] = { const_cast<char*>(appname), NULL };
+   static char *argv[] = { const_cast<char*>(appname), nullptr };
 
    app = new QApplication(argc, argv);
    impl = new ThreadWindowImpl(plugins, wave_iface);

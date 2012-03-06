@@ -16,7 +16,7 @@ namespace Global
 }
 
 Plugin::Plugin(const ssnes_dsp_info_t *info, const char *lib) : 
-   plug(NULL), plug_handle(NULL), is_enabled(true), plug_path(lib)
+   plug(nullptr), plug_handle(nullptr), is_enabled(true), plug_path(lib)
 {
    if (!lib)
       return;
@@ -37,7 +37,7 @@ Plugin::Plugin(const ssnes_dsp_info_t *info, const char *lib) :
    plug_handle = plug->init(info);
 }
 
-Plugin::Plugin() : plug(NULL), plug_handle(NULL), is_enabled(true)
+Plugin::Plugin() : plug(nullptr), plug_handle(nullptr), is_enabled(true)
 {}
 
 void Plugin::process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in)

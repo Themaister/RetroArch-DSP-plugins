@@ -73,7 +73,7 @@ static bool parse_line(struct entry_list *list, char *line)
    // If we don't have an equal sign here, we've got an invalid string...
    if (*line != '=')
    {
-      list->key = NULL;
+      list->key = nullptr;
       free(key);
       return false;
    }
@@ -86,9 +86,9 @@ static bool parse_line(struct entry_list *list, char *line)
    if (*line == '"')
    {
       char *tok = strtok(line + 1, "\"");
-      if (tok == NULL)
+      if (tok == nullptr)
       {
-         list->key = NULL;
+         list->key = nullptr;
          free(key);
          return false;
       }
@@ -97,9 +97,9 @@ static bool parse_line(struct entry_list *list, char *line)
    else // We don't have that... Read till next space.
    {
       char *tok = strtok(line, " \t\f");
-      if (tok == NULL)
+      if (tok == nullptr)
       {
-         list->key = NULL;
+         list->key = nullptr;
          free(key);
          return false;
       }
@@ -113,17 +113,17 @@ config_file_t *config_file_new(const char *path)
 {
 
    struct config_file *conf = (struct config_file*)calloc(1, sizeof(*conf));
-   if (conf == NULL)
-      return NULL;
+   if (conf == nullptr)
+      return nullptr;
 
-   if (path == NULL)
+   if (path == nullptr)
       return conf;
 
    FILE *file = fopen(path, "r");
    if (!file)
    {
       free(conf);
-      return NULL;
+      return nullptr;
    }
 
    struct entry_list *tail = conf->entries;
@@ -137,7 +137,7 @@ config_file_t *config_file_new(const char *path)
       {
          if (parse_line(list, line))
          {
-            if (conf->entries == NULL)
+            if (conf->entries == nullptr)
             {
                conf->entries = list;
                tail = list;
@@ -158,11 +158,11 @@ config_file_t *config_file_new(const char *path)
 
 void config_file_free(config_file_t *conf)
 {
-   if (conf != NULL)
+   if (conf != nullptr)
    {
       struct entry_list *tmp = conf->entries;
       struct entry_list *old = tmp;
-      while (tmp != NULL)
+      while (tmp != nullptr)
       {
          free(tmp->key);
          free(tmp->value);
@@ -178,11 +178,11 @@ bool config_get_double(config_file_t *conf, const char *key, double *in)
 {
    struct entry_list *list = conf->entries;
 
-   while (list != NULL)
+   while (list != nullptr)
    {
       if (strcmp(key, list->key) == 0)
       {
-         *in = strtod(list->value, NULL);
+         *in = strtod(list->value, nullptr);
          return true;
       }
       list = list->next;
@@ -194,11 +194,11 @@ bool config_get_int(config_file_t *conf, const char *key, int *in)
 {
    struct entry_list *list = conf->entries;
 
-   while (list != NULL)
+   while (list != nullptr)
    {
       if (strcmp(key, list->key) == 0)
       {
-         *in = strtol(list->value, NULL, 0);
+         *in = strtol(list->value, nullptr, 0);
          return true;
       }
       list = list->next;
@@ -210,7 +210,7 @@ bool config_get_char(config_file_t *conf, const char *key, char *in)
 {
    struct entry_list *list = conf->entries;
 
-   while (list != NULL)
+   while (list != nullptr)
    {
       if (strcmp(key, list->key) == 0)
       {
@@ -228,7 +228,7 @@ bool config_get_string(config_file_t *conf, const char *key, char **str)
 {
    struct entry_list *list = conf->entries;
 
-   while (list != NULL)
+   while (list != nullptr)
    {
       if (strcmp(key, list->key) == 0)
       {
@@ -244,7 +244,7 @@ bool config_get_bool(config_file_t *conf, const char *key, bool *in)
 {
    struct entry_list *list = conf->entries;
 
-   while (list != NULL)
+   while (list != nullptr)
    {
       if (strcmp(key, list->key) == 0)
       {
@@ -270,7 +270,7 @@ void config_set_string(config_file_t *conf, const char *key, const char *val)
 {
    struct entry_list *list = conf->entries;
    struct entry_list *last = list;
-   while (list != NULL)
+   while (list != nullptr)
    {
       if (strcmp(key, list->key) == 0)
       {
@@ -343,7 +343,7 @@ void config_file_dump(config_file_t *conf, FILE *file)
 {
    struct entry_list *list = conf->entries;
 
-   while (list != NULL)
+   while (list != nullptr)
    {
       fprintf(file, "%s = \"%s\"\n", list->key, list->value);
       list = list->next;

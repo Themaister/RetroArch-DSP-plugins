@@ -13,7 +13,7 @@ typedef struct config_file config_file_t;
 // - Format is: key = value. There can be as many spaces as you like in-between.
 // - Value can be wrapped inside "" for multiword strings. (foo = "hai u")
 
-// Loads a config file. Returns NULL if file doesn't exist. NULL path will create an empty config file.
+// Loads a config file. Returns nullptr if file doesn't exist. nullptr path will create an empty config file.
 config_file_t *config_file_new(const char *path);
 // Frees config file.
 void config_file_free(config_file_t *conf);

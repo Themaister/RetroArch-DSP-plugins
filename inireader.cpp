@@ -15,7 +15,7 @@ ConfigFile::ConfigFile(const std::string &filename)
    base += filename;
    conf = config_file_new(base.c_str());
    if (!conf)
-      conf = config_file_new(NULL);
+      conf = config_file_new(nullptr);
 }
 
 ConfigFile::~ConfigFile()

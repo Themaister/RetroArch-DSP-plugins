@@ -10,7 +10,7 @@ using namespace std;
 
 Echo::Echo()
 {
-	history = NULL;
+	history = nullptr;
 	rate = 44100;
 	SetDelay(200);		
 	SetAmp(128);		
@@ -21,7 +21,7 @@ Echo::Echo()
 Echo::~Echo()
 {
 	delete [] history;
-	history = NULL;
+	history = nullptr;
 }
 
 

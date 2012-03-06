@@ -17,7 +17,7 @@ namespace Global
 class Plugin
 {
    public:
-      Plugin(const ssnes_dsp_info_t *info, const char *lib = NULL);
+      Plugin(const ssnes_dsp_info_t *info, const char *lib = nullptr);
       Plugin();
       ~Plugin();
 

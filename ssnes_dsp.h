@@ -86,7 +86,7 @@ typedef struct ssnes_dsp_input
 
 typedef struct ssnes_dsp_plugin
 {
-   // Creates a handle of the plugin. Returns NULL if failed.
+   // Creates a handle of the plugin. Returns nullptr if failed.
    void* (*init)(const ssnes_dsp_info_t *info);
 
    // Processes input data. 
@@ -105,7 +105,7 @@ typedef struct ssnes_dsp_plugin
    // Signal plugin that it may open a configuring window or
    // something similiar. The behavior of this function
    // is thus plugin dependent. Implementing this is optional,
-   // and can be set to NULL.
+   // and can be set to nullptr.
    void (*config)(void *data);
 
    // Human readable identification string.
@@ -113,7 +113,7 @@ typedef struct ssnes_dsp_plugin
 
    // Called every frame, allows creating a GUI main loop in the main thread.
    // GUI events can be processed here in a non-blocking fashion.
-   // Can be set to NULL to ignore it.
+   // Can be set to nullptr to ignore it.
    void (*events)(void *data);
 } ssnes_dsp_plugin_t;
 
