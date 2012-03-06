@@ -34,6 +34,8 @@ else
    QT_LIBS := -L$(QTDIR)/lib -lQtCore4 -lQtGui4
 endif
 
+MOC = $(QTDIR)/bin/moc
+
 INCLUDES := -I.
 
 all: $(TARGET)
@@ -45,7 +47,7 @@ all: $(TARGET)
 	$(CXX) $(CXXFLAGS) $(QT_CXXFLAGS) $(INCLUDES) -DMETA_GUI -O3 -std=gnu++0x -c -o $@ $<
 
 %.moc.cxx: %.moc.hpp
-	$(QTDIR)/bin/moc -o $@ $< $(INCLUDES)
+	$(MOC) -o $@ $< $(INCLUDES)
 
 $(TARGET): $(OBJ)
 	$(CXX) -o $@ $(OBJ) $(QT_LIBS) -s -shared -Wl,-no-undefined -static-libgcc -static-libstdc++
