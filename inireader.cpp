@@ -48,11 +48,11 @@ int ConfigFile::get_int(const std::string &key, int def_val)
       return def_val;
 }
 
-float ConfigFile::get_float(const std::string &key, float def_val)
+double ConfigFile::get_double(const std::string &key, double def_val)
 {
    double res;
    if (config_get_double(conf, key.c_str(), &res))
-      return static_cast<float>(res);
+      return res;
    else
       return def_val;
 }
@@ -82,6 +82,18 @@ std::string ConfigFile::get_string(const std::string &key, const std::string &de
 ConfigFile& ConfigFile::set_string(const std::string &key, const std::string &val)
 {
    config_set_string(conf, key.c_str(), val.c_str());
+   return *this;
+}
+
+ConfigFile& ConfigFile::set_double(const std::string &key, double val)
+{
+   config_set_double(conf, key.c_str(), val);
+   return *this;
+}
+
+ConfigFile& ConfigFile::set_int(const std::string &key, int val)
+{
+   config_set_int(conf, key.c_str(), val);
    return *this;
 }
 

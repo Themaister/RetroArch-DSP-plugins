@@ -90,11 +90,11 @@ struct PlugWah : public AbstractPlugin
 static void* dsp_init(const ssnes_dsp_info_t *info)
 {
    ConfigFile cfg("ssnes_effect.cfg");
-   float freq = cfg.get_float("wah_lfo_frequency", 1.5); 
-   float startphase = cfg.get_float("wah_lfo_start_phase", 0.0);
-   float res = cfg.get_float("wah_lfo_resonance", 2.5);
-   float depth = cfg.get_float("wah_lfo_depth", 0.70);
-   float freqofs = cfg.get_float("wah_lfo_frequency_offset", 0.30);
+   float freq = cfg.get_double("wah_lfo_frequency", 1.5); 
+   float startphase = cfg.get_double("wah_lfo_start_phase", 0.0);
+   float res = cfg.get_double("wah_lfo_resonance", 2.5);
+   float depth = cfg.get_double("wah_lfo_depth", 0.70);
+   float freqofs = cfg.get_double("wah_lfo_frequency_offset", 0.30);
 
    PlugWah *wah = new PlugWah(freq, startphase, res, depth, freqofs);
    wah->wah_l.SetDepth(depth);

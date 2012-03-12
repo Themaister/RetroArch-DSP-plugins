@@ -64,15 +64,19 @@ struct EchoFilter : public AbstractPlugin
 
       opt.description = "Delay (#1)";
       opt.id = Echo1;
+      opt.conf_name = "echo_sse_delay0";
       dsp_options.push_back(opt);
       opt.description = "Delay (#2)";
       opt.id = Echo2;
+      opt.conf_name = "echo_sse_delay1";
       dsp_options.push_back(opt);
       opt.description = "Delay (#3)";
       opt.id = Echo3;
+      opt.conf_name = "echo_sse_delay2";
       dsp_options.push_back(opt);
       opt.description = "Delay (#4)";
       opt.id = Echo4;
+      opt.conf_name = "echo_sse_delay3";
       dsp_options.push_back(opt);
 
       opt.d.min = 0.0;
@@ -81,15 +85,19 @@ struct EchoFilter : public AbstractPlugin
 
       opt.description = "Amplification (#1)";
       opt.id = Amp1;
+      opt.conf_name = "echo_sse_amp0";
       dsp_options.push_back(opt);
       opt.description = "Amplification (#2)";
       opt.id = Amp2;
+      opt.conf_name = "echo_sse_amp1";
       dsp_options.push_back(opt);
       opt.description = "Amplification (#3)";
       opt.id = Amp3;
+      opt.conf_name = "echo_sse_amp2";
       dsp_options.push_back(opt);
       opt.description = "Amplification (#4)";
       opt.id = Amp4;
+      opt.conf_name = "echo_sse_amp3";
       dsp_options.push_back(opt);
 
       opt.description = "Echo feedback";
@@ -97,7 +105,15 @@ struct EchoFilter : public AbstractPlugin
       opt.d.min = 0.0;
       opt.d.max = 1.0;
       opt.d.current = 0.0;
+      opt.conf_name = "echo_sse_feedback";
       dsp_options.push_back(opt);
+
+      load_options("ssnes_effect.cfg");
+   }
+
+   ~EchoFilter()
+   {
+      save_options("ssnes_effect.cfg");
    }
 
    void set_option_double(PluginOption::ID id, double val)

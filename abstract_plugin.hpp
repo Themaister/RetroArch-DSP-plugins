@@ -4,12 +4,15 @@
 #include <string>
 #include <list>
 #include <iostream>
+#include <algorithm>
+#include "inireader.h"
 
 struct PluginOption
 {
    typedef unsigned ID;
    ID id;
    std::string description;
+   std::string conf_name;
 
    enum class Type
    {
@@ -17,20 +20,6 @@ struct PluginOption
       Integer,
       Selection
    } type;
-   
-   struct
-   {
-      double min;
-      double max;
-      double current;
-   } d;
-
-   struct
-   {
-      int min;
-      int max;
-      int current;
-   } i;
 
    struct Selection
    {
@@ -38,6 +27,24 @@ struct PluginOption
          : id(id_), description(str) {}
       ID id;
       std::string description;
+   };
+  
+   union
+   {
+      struct
+      {
+         double min;
+         double max;
+         double current;
+      } d;
+
+      struct
+      {
+         int min;
+         int max;
+         int current;
+      } i;
+
    };
 
    struct
@@ -63,6 +70,41 @@ class AbstractPlugin
       virtual bool is_resampler() const { return false; }
       virtual Layout layout() const { return plug_layout; }
       virtual const std::list<PluginOption>& options() { return dsp_options; }
+
+      void set_option(PluginOption::ID id, double val)
+      {
+         auto elem = std::find_if(dsp_options.begin(), dsp_options.end(),
+               [id](const PluginOption &option) {
+                  return option.id == id;
+               });
+
+         if (elem != dsp_options.end())
+            elem->d.current = val;
+
+         set_option_double(id, val);
+      }
+
+      void set_option(PluginOption::ID id, int val)
+      {
+         auto elem = std::find_if(dsp_options.begin(), dsp_options.end(),
+               [id](const PluginOption &option) {
+                  return option.id == id;
+               });
+
+         if (elem != dsp_options.end())
+            elem->i.current = val;
+
+         set_option_int(id, val);
+      }
+
+      void set_option(PluginOption::ID id, PluginOption::ID selection)
+      {
+         set_option_selection(id, selection);
+      }
+
+      virtual ~AbstractPlugin() {}
+
+   protected:
       virtual void set_option_double(PluginOption::ID id, double val)
       {
          std::cerr << "[MetaDSP]: Unimplemented, setting option (double) #" << id <<
@@ -80,9 +122,50 @@ class AbstractPlugin
          std::cerr << "[MetaDSP]: Unimplemented, setting selection (selection) #" << static_cast<int>(selection) << std::endl;
       }
 
-      virtual ~AbstractPlugin() {}
+      void load_options(const std::string &conf_path)
+      {
+         ConfigFile cfg(conf_path);
+         for (auto &opt : dsp_options)
+         {
+            switch (opt.type)
+            {
+               case PluginOption::Type::Integer:
+                  set_option(opt.id, cfg.get_int(opt.conf_name, opt.i.current));
+                  break;
 
-   protected:
+               case PluginOption::Type::Double:
+                  set_option(opt.id, cfg.get_double(opt.conf_name, opt.d.current));
+                  break;
+
+               default:
+                  break;
+            }
+         }
+      }
+
+      void save_options(const std::string &conf_path)
+      {
+         ConfigFile cfg(conf_path);
+         for (auto &opt : dsp_options)
+         {
+            switch (opt.type)
+            {
+               case PluginOption::Type::Integer:
+                  cfg.set_int(opt.conf_name, opt.i.current);
+                  break;
+
+               case PluginOption::Type::Double:
+                  cfg.set_double(opt.conf_name, opt.d.current);
+                  break;
+
+               default:
+                  break;
+            }
+         }
+
+         cfg.write(conf_path);
+      }
+
       std::list<PluginOption> dsp_options;
       Layout plug_layout;
 };

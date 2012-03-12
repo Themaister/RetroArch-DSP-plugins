@@ -15,7 +15,7 @@ struct PlugReverb : public AbstractPlugin
    PlugReverb(float drytime, float wettime, float damping,
          float roomwidth, float roomsize) : AbstractPlugin()
    {
-      PluginOption opt = {0};
+      PluginOption opt;
       opt.type = PluginOption::Type::Double;
 
       opt.id = DRYTIME;
@@ -91,11 +91,11 @@ struct PlugReverb : public AbstractPlugin
 static void* dsp_init(const ssnes_dsp_info_t *)
 {
    ConfigFile cfg("ssnes_effect.cfg");
-   float drytime = cfg.get_float("reverb_dry_time", 0.43); 
-   float wettime = cfg.get_float("reverb_wet_time", 0.57);
-   float damping = cfg.get_float("reverb_damping", 0.45);
-   float roomwidth = cfg.get_float("reverb_room_width", 0.56);
-   float roomsize = cfg.get_float("reverb_room_size", 0.56);
+   float drytime = cfg.get_double("reverb_dry_time", 0.43); 
+   float wettime = cfg.get_double("reverb_wet_time", 0.57);
+   float damping = cfg.get_double("reverb_damping", 0.45);
+   float roomwidth = cfg.get_double("reverb_room_width", 0.56);
+   float roomsize = cfg.get_double("reverb_room_size", 0.56);
 
    PlugReverb *rev = new PlugReverb(drytime, wettime, damping, roomwidth, roomsize);
    rev->rev_l.setdamp(damping);

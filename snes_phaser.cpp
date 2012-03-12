@@ -117,9 +117,9 @@ struct PlugPhaser : public AbstractPlugin
 static void* dsp_init(const ssnes_dsp_info_t *info)
 {
    ConfigFile cfg("ssnes_effect.cfg");
-   float freq = cfg.get_float("phaser_lfo_frequency", 0.4); 
-   float startphase = cfg.get_float("phaser_lfo_start_phase", 0);
-   float fb = cfg.get_float("phaser_lfo_feedback", 0);
+   float freq = cfg.get_double("phaser_lfo_frequency", 0.4); 
+   float startphase = cfg.get_double("phaser_lfo_start_phase", 0);
+   float fb = cfg.get_double("phaser_lfo_feedback", 0);
    int depth = cfg.get_int("phaser_lfo_depth", 100);
    int stages = cfg.get_int("phaser_lfo_stage_amount", 2);
    int drywet = cfg.get_int("phaser_lfo_dry_wet_ratio", 128);
