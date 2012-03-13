@@ -17,6 +17,7 @@ class ConfigFile
       ConfigFile& set_string(const std::string &key, const std::string &val);
       ConfigFile& set_double(const std::string &key, double val);
       ConfigFile& set_int(const std::string &key, int val);
+      ConfigFile& set_bool(const std::string &key, bool val);
 
       void write(const std::string &filename);
 
@@ -25,4 +26,5 @@ class ConfigFile
       static std::string GetBaseDir();
 };
 
-#endif//INIREADER_H
+#endif
+

@@ -1,17 +1,7 @@
 #include "meta.hpp"
 #include "../inireader.h"
+#include "../utils.hpp"
 #include <iostream>
-
-static const char *plug_names[MetaDSP::max_plugs] = {
-   "meta_plugin0",
-   "meta_plugin1",
-   "meta_plugin2",
-   "meta_plugin3",
-   "meta_plugin4",
-   "meta_plugin5",
-   "meta_plugin6",
-   "meta_plugin7",
-};
 
 MetaDSP::MetaDSP(float input_rate, float output_rate) : sample_rate(input_rate)
 {
@@ -21,9 +11,10 @@ MetaDSP::MetaDSP(float input_rate, float output_rate) : sample_rate(input_rate)
 
    for (unsigned i = 0; i < max_plugs; i++)
    {
-      plugins[i] = std::make_shared<Plugin>(&info, cfg.get_string(plug_names[i], "").c_str());
+      plugins[i] = std::make_shared<Plugin>(&info, cfg.get_string(Utils::join("meta_plugin", i), "").c_str());
       if (plugins[i]->is_resampler())
          plugins[i] = std::make_shared<Plugin>();
+      plugins[i]->enabled(cfg.get_bool(Utils::join("plugin_enabled", i), true));
    }
 
    info.output_rate = output_rate;
@@ -42,7 +33,10 @@ MetaDSP::~MetaDSP()
 {
    ConfigFile cfg("ssnes_effect.cfg");
    for (unsigned i = 0; i < max_plugs; i++)
-      cfg.set_string(plug_names[i], plugins[i]->path());
+   {
+      cfg.set_string(Utils::join("meta_plugin", i), plugins[i]->path());
+      cfg.set_bool(Utils::join("plugin_enabled", i), plugins[i]->enabled());
+   }
 
    cfg.write("ssnes_effect.cfg");
 }

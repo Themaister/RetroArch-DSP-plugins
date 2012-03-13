@@ -70,7 +70,7 @@ PluginSettings::PluginSettings(std::shared_ptr<Plugin> &plug, QWidget *parent)
    vbox->setAlignment(Qt::AlignTop);
 
    QCheckBox *box = new QCheckBox("Enable", this);
-   box->setCheckState(Qt::Checked);
+   box->setCheckState(plug->enabled() ? Qt::Checked : Qt::Unchecked);
    connect(box, SIGNAL(stateChanged(int)), this, SLOT(enable(int)));
    vbox->addWidget(box);
 

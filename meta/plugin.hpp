@@ -29,7 +29,8 @@ class Plugin
       std::string ident() const;
       const std::string& path() const;
 
-      void enabled(bool enable = true);
+      void enabled(bool enable);
+      bool enabled() const;
 
       bool is_resampler() const;
       AbstractPlugin::Layout layout() const;

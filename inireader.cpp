@@ -97,6 +97,12 @@ ConfigFile& ConfigFile::set_int(const std::string &key, int val)
    return *this;
 }
 
+ConfigFile& ConfigFile::set_bool(const std::string &key, bool val)
+{
+   config_set_bool(conf, key.c_str(), val);
+   return *this;
+}
+
 void ConfigFile::write(const std::string &filename)
 {
    auto base = GetBaseDir();

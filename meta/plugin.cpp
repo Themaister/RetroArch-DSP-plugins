@@ -57,6 +57,11 @@ void Plugin::enabled(bool enable)
    is_enabled = enable;
 }
 
+bool Plugin::enabled() const
+{
+   return is_enabled;
+}
+
 void Plugin::show()
 {
    if (plug_handle)

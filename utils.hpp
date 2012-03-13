@@ -2,6 +2,9 @@
 #define UTILS_HPP__
 
 #include <algorithm>
+#include <string>
+#include <sstream>
+#include <utility>
 
 namespace Utils
 {
@@ -45,6 +48,22 @@ namespace Utils
    void set_all(T &t, const U &u)
    {
       std::fill(begin(t), end(t), u);
+   }
+
+   template <class T>
+   std::string join(T&& t)
+   {
+      std::ostringstream str;
+      str << std::forward<T>(t);
+      return str.str();
+   }
+
+   template <class T, class... U>
+   std::string join(T&& t, U&&... u)
+   {
+      std::ostringstream str;
+      str << std::forward<T>(t) << join(std::forward<U>(u)...);
+      return str.str();
    }
 }
 
