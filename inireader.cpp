@@ -28,7 +28,7 @@ std::string ConfigFile::GetBaseDir()
 {
 #ifdef _WIN32
    char buf[MAX_PATH];
-   GetModuleFileName(NULL, buf, sizeof(buf));
+   GetModuleFileName(GetModuleHandle(nullptr), buf, sizeof(buf));
    char *ptr = strrchr(buf, '/');
    if (!ptr)
       ptr = strrchr(buf, '\\');
