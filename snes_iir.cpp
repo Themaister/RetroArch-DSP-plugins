@@ -23,7 +23,7 @@ struct PlugIIR : public AbstractPlugin
    PlugIIR(int input_rate, float freq, float gain) :
       AbstractPlugin(), rate(input_rate), type(0)
    {
-      PluginOption opt = {0};
+      PluginOption opt{};
 
       opt.type = PluginOption::Type::Double;
       opt.id = FREQ;
@@ -31,6 +31,7 @@ struct PlugIIR : public AbstractPlugin
       opt.d.min = 50;
       opt.d.max = 16000;
       opt.d.current = freq;
+      opt.conf_name = "iir_frequency";
       dsp_options.push_back(opt);
 
       opt.id = GAIN;
@@ -38,6 +39,7 @@ struct PlugIIR : public AbstractPlugin
       opt.d.min = -50.0;
       opt.d.max = 50.0;
       opt.d.current = gain;
+      opt.conf_name = "iir_gain";
       dsp_options.push_back(opt);
 
       opt.type = PluginOption::Type::Selection;
@@ -58,7 +60,15 @@ struct PlugIIR : public AbstractPlugin
       opt.s.selection.push_back(PluginOption::Selection(HSH, "High-shelf filter"));
       opt.s.selection.push_back(PluginOption::Selection(RIAA_CD, "CD de-emphasis"));
       
+      opt.conf_name = "iir_filter_type";
       dsp_options.push_back(opt);
+
+      load_options("ssnes_effect.cfg");
+   }
+
+   ~PlugIIR()
+   {
+      save_options("ssnes_effect.cfg");
    }
 
    void set_option_double(PluginOption::ID id, double val)

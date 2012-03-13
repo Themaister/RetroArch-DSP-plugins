@@ -54,6 +54,15 @@ struct PluginOption
    } s;
 };
 
+template <class T>
+static auto find_id(T& t, PluginOption::ID id) -> decltype(begin(t))
+{
+   return std::find_if(t.begin(), t.end(),
+         [id](const PluginOption &opt) {
+            return opt.id == id;
+         });
+}
+
 // Every plugin used by meta-plugin must inherit from this!
 // Failing to do so will crash stuff hard! :D
 class AbstractPlugin
@@ -73,11 +82,7 @@ class AbstractPlugin
 
       void set_option(PluginOption::ID id, double val)
       {
-         auto elem = std::find_if(dsp_options.begin(), dsp_options.end(),
-               [id](const PluginOption &option) {
-                  return option.id == id;
-               });
-
+         auto elem = find_id(dsp_options, id);
          if (elem != dsp_options.end())
             elem->d.current = val;
 
@@ -86,11 +91,7 @@ class AbstractPlugin
 
       void set_option(PluginOption::ID id, int val)
       {
-         auto elem = std::find_if(dsp_options.begin(), dsp_options.end(),
-               [id](const PluginOption &option) {
-                  return option.id == id;
-               });
-
+         auto elem = find_id(dsp_options, id);
          if (elem != dsp_options.end())
             elem->i.current = val;
 
@@ -99,6 +100,10 @@ class AbstractPlugin
 
       void set_option(PluginOption::ID id, PluginOption::ID selection)
       {
+         auto elem = find_id(dsp_options, id);
+         if (elem != dsp_options.end())
+            elem->s.current = selection;
+
          set_option_selection(id, selection);
       }
 
@@ -137,6 +142,12 @@ class AbstractPlugin
                   set_option(opt.id, cfg.get_double(opt.conf_name, opt.d.current));
                   break;
 
+               case PluginOption::Type::Selection:
+                  set_option(opt.id,
+                        static_cast<PluginOption::ID>(cfg.get_int(opt.conf_name,
+                              opt.s.current)));
+                  break;
+
                default:
                   break;
             }
@@ -156,6 +167,10 @@ class AbstractPlugin
 
                case PluginOption::Type::Double:
                   cfg.set_double(opt.conf_name, opt.d.current);
+                  break;
+
+               case PluginOption::Type::Selection:
+                  cfg.set_int(opt.conf_name, opt.s.current);
                   break;
 
                default:
