@@ -23,6 +23,7 @@ struct PlugPhaser : public AbstractPlugin
       opt.d.min = 0.05;
       opt.d.max = 5.0;
       opt.d.current = freq;
+      opt.conf_name = "phaser_lfo_frequency";
       dsp_options.push_back(opt);
 
       opt.id = STARTPHASE;
@@ -30,6 +31,7 @@ struct PlugPhaser : public AbstractPlugin
       opt.d.min = 0;
       opt.d.max = 256;
       opt.d.current = startphase;
+      opt.conf_name = "phaser_lfo_start_phase";
       dsp_options.push_back(opt);
 
       opt.id = LFO_FB;
@@ -37,6 +39,7 @@ struct PlugPhaser : public AbstractPlugin
       opt.d.min = 0;
       opt.d.max = 1;
       opt.d.current = fb;
+      opt.conf_name = "phaser_lfo_feedback";
       dsp_options.push_back(opt);
 
       opt.id = DEPTH;
@@ -44,6 +47,7 @@ struct PlugPhaser : public AbstractPlugin
       opt.d.min = 0;
       opt.d.max = 200;
       opt.d.current = depth;
+      opt.conf_name = "phaser_lfo_depth";
       dsp_options.push_back(opt);
 
       opt.id = DRYWET;
@@ -51,6 +55,7 @@ struct PlugPhaser : public AbstractPlugin
       opt.d.min = 0;
       opt.d.max = 256;
       opt.d.current = drywet;
+      opt.conf_name = "phaser_lfo_dry_wet_ratio";
       dsp_options.push_back(opt);
 
       opt.type = PluginOption::Type::Integer;
@@ -59,7 +64,15 @@ struct PlugPhaser : public AbstractPlugin
       opt.i.min = 0;
       opt.i.max = 10;
       opt.i.current = stages;
+      opt.conf_name = "phaser_lfo_stage_amount";
       dsp_options.push_back(opt);
+
+      load_options("ssnes_effect.cfg");
+   }
+
+   ~PlugPhaser()
+   {
+      save_options("ssnes_effect.cfg");
    }
 
    void set_option_double(PluginOption::ID id, double val)
@@ -116,13 +129,12 @@ struct PlugPhaser : public AbstractPlugin
 
 static void* dsp_init(const ssnes_dsp_info_t *info)
 {
-   ConfigFile cfg("ssnes_effect.cfg");
-   float freq = cfg.get_double("phaser_lfo_frequency", 0.4); 
-   float startphase = cfg.get_double("phaser_lfo_start_phase", 0);
-   float fb = cfg.get_double("phaser_lfo_feedback", 0);
-   int depth = cfg.get_int("phaser_lfo_depth", 100);
-   int stages = cfg.get_int("phaser_lfo_stage_amount", 2);
-   int drywet = cfg.get_int("phaser_lfo_dry_wet_ratio", 128);
+   float freq = 0.4; 
+   float startphase = 0;
+   float fb = 0;
+   int depth = 100;
+   int stages = 2;
+   int drywet = 128;
 
    PlugPhaser *phaser = new PlugPhaser(freq, startphase, fb, depth, stages, drywet);
    phaser->phase_l.SetLFOFreq(freq);

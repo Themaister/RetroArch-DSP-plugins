@@ -12,7 +12,7 @@ struct PlugEcho : public AbstractPlugin
    Echo echo_r;
    float buf[4096];
 
-   PlugEcho(int delay, int amp) : AbstractPlugin()
+   PlugEcho() : AbstractPlugin()
    {
       PluginOption opt = {0};
       opt.type = PluginOption::Type::Double;
@@ -21,15 +21,24 @@ struct PlugEcho : public AbstractPlugin
       opt.description = "Delay";
       opt.d.min = 1.0;
       opt.d.max = 1000.0;
-      opt.d.current = delay;
+      opt.d.current = 200;
+      opt.conf_name = "echo_delay";
       dsp_options.push_back(opt);
 
       opt.id = AMP;
       opt.description = "Amplification";
       opt.d.min = 0.0;
       opt.d.max = 256.0;
-      opt.d.current = amp;
+      opt.d.current = 128;
+      opt.conf_name = "echo_amplification";
       dsp_options.push_back(opt);
+
+      load_options("ssnes_effect.cfg");
+   }
+
+   ~PlugEcho()
+   {
+      save_options("ssnes_effect.cfg");
    }
 
    void set_option_double(PluginOption::ID id, double val)
@@ -53,18 +62,13 @@ struct PlugEcho : public AbstractPlugin
 
 static void* dsp_init(const ssnes_dsp_info_t *info)
 {
-   ConfigFile cfg("ssnes_effect.cfg");
-
-   int amp = cfg.get_int("echo_amplification", 128); 
-   int delay = cfg.get_int("echo_delay", 200);
-
-   PlugEcho *echo = new PlugEcho(delay, amp);
+   PlugEcho *echo = new PlugEcho;
    echo->echo_l.SetSampleRate(info->input_rate);
-   echo->echo_l.SetAmp(amp);
-   echo->echo_l.SetDelay(delay);
+   echo->echo_l.SetAmp(128);
+   echo->echo_l.SetDelay(200);
    echo->echo_r.SetSampleRate(info->input_rate);
-   echo->echo_r.SetAmp(amp);
-   echo->echo_r.SetDelay(delay);
+   echo->echo_r.SetAmp(128);
+   echo->echo_r.SetDelay(200);
 
    return echo;
 }

@@ -15,7 +15,7 @@ struct PlugReverb : public AbstractPlugin
    PlugReverb(float drytime, float wettime, float damping,
          float roomwidth, float roomsize) : AbstractPlugin()
    {
-      PluginOption opt;
+      PluginOption opt{};
       opt.type = PluginOption::Type::Double;
 
       opt.id = DRYTIME;
@@ -23,6 +23,7 @@ struct PlugReverb : public AbstractPlugin
       opt.d.min = 0.01;
       opt.d.max = 2.0;
       opt.d.current = drytime;
+      opt.conf_name = "reverb_dry_time";
       dsp_options.push_back(opt);
 
       opt.id = WETTIME;
@@ -30,6 +31,7 @@ struct PlugReverb : public AbstractPlugin
       opt.d.min = 0.01;
       opt.d.max = 2.0;
       opt.d.current = wettime;
+      opt.conf_name = "reverb_wet_time";
       dsp_options.push_back(opt);
 
       opt.id = DAMPING;
@@ -37,6 +39,7 @@ struct PlugReverb : public AbstractPlugin
       opt.d.min = 0.01;
       opt.d.max = 2.0;
       opt.d.current = damping;
+      opt.conf_name = "reverb_damping";
       dsp_options.push_back(opt);
 
       opt.id = ROOMWIDTH;
@@ -44,6 +47,7 @@ struct PlugReverb : public AbstractPlugin
       opt.d.min = 0.01;
       opt.d.max = 2.0;
       opt.d.current = roomwidth;
+      opt.conf_name = "reverb_room_width";
       dsp_options.push_back(opt);
 
       opt.id = ROOMSIZE;
@@ -51,7 +55,15 @@ struct PlugReverb : public AbstractPlugin
       opt.d.min = 0.01;
       opt.d.max = 2.0;
       opt.d.current = roomsize;
+      opt.conf_name = "reverb_room_size";
       dsp_options.push_back(opt);
+
+      load_options("ssnes_effect.cfg");
+   }
+
+   ~PlugReverb()
+   {
+      save_options("ssnes_effect.cfg");
    }
 
    void set_option_double(PluginOption::ID id, double val)
@@ -90,12 +102,11 @@ struct PlugReverb : public AbstractPlugin
 
 static void* dsp_init(const ssnes_dsp_info_t *)
 {
-   ConfigFile cfg("ssnes_effect.cfg");
-   float drytime = cfg.get_double("reverb_dry_time", 0.43); 
-   float wettime = cfg.get_double("reverb_wet_time", 0.57);
-   float damping = cfg.get_double("reverb_damping", 0.45);
-   float roomwidth = cfg.get_double("reverb_room_width", 0.56);
-   float roomsize = cfg.get_double("reverb_room_size", 0.56);
+   float drytime = 0.43; 
+   float wettime = 0.57;
+   float damping = 0.45;
+   float roomwidth = 0.56;
+   float roomsize = 0.56;
 
    PlugReverb *rev = new PlugReverb(drytime, wettime, damping, roomwidth, roomsize);
    rev->rev_l.setdamp(damping);

@@ -20,7 +20,7 @@ struct PlugIIR : public AbstractPlugin
    Timer timer;
 #endif
 
-   PlugIIR(int input_rate, float freq, float gain) :
+   PlugIIR(int input_rate, float freq = 1024, float gain = 0) :
       AbstractPlugin(), rate(input_rate), type(0)
    {
       PluginOption opt{};
@@ -31,7 +31,7 @@ struct PlugIIR : public AbstractPlugin
       opt.d.min = 50;
       opt.d.max = 16000;
       opt.d.current = freq;
-      opt.conf_name = "iir_frequency";
+      opt.conf_name = "iir_filter_frequency";
       dsp_options.push_back(opt);
 
       opt.id = GAIN;
@@ -39,7 +39,7 @@ struct PlugIIR : public AbstractPlugin
       opt.d.min = -50.0;
       opt.d.max = 50.0;
       opt.d.current = gain;
-      opt.conf_name = "iir_gain";
+      opt.conf_name = "iir_filter_gain";
       dsp_options.push_back(opt);
 
       opt.type = PluginOption::Type::Selection;
@@ -60,7 +60,7 @@ struct PlugIIR : public AbstractPlugin
       opt.s.selection.push_back(PluginOption::Selection(HSH, "High-shelf filter"));
       opt.s.selection.push_back(PluginOption::Selection(RIAA_CD, "CD de-emphasis"));
       
-      opt.conf_name = "iir_filter_type";
+      opt.conf_name = "iir_type";
       dsp_options.push_back(opt);
 
       load_options("ssnes_effect.cfg");
@@ -117,20 +117,15 @@ struct PlugIIR : public AbstractPlugin
 
 static void* dsp_init(const ssnes_dsp_info_t *info)
 {
-   ConfigFile cfg("ssnes_effect.cfg");
-   int type = cfg.get_int("iir_type", 0); 
-   float freq = cfg.get_double("iir_filter_frequency", 1024.0);
-   float gain = cfg.get_double("iir_filter_gain", 0.0);
-
-   PlugIIR *iir = new PlugIIR(info->input_rate, freq, gain);
-   iir->iir_l.setFrequency(freq);
+   PlugIIR *iir = new PlugIIR(info->input_rate);
+   iir->iir_l.setFrequency(1024);
    iir->iir_l.setQuality(0.707);
-   iir->iir_l.setGain(gain);
-   iir->iir_l.init(info->input_rate, type);
-   iir->iir_r.setFrequency(freq);
+   iir->iir_l.setGain(0);
+   iir->iir_l.init(info->input_rate, 0);
+   iir->iir_r.setFrequency(1024);
    iir->iir_r.setQuality(0.707);
-   iir->iir_r.setGain(gain);
-   iir->iir_r.init(info->input_rate, type);
+   iir->iir_r.setGain(0);
+   iir->iir_r.init(info->input_rate, 0);
 
    return iir;
 }

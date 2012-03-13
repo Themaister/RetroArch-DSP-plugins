@@ -22,6 +22,7 @@ struct PlugWah : public AbstractPlugin
       opt.d.min = 0.1;
       opt.d.max = 10.0;
       opt.d.current = freq;
+      opt.conf_name = "wah_lfo_frequency";
       dsp_options.push_back(opt);
 
       opt.id = STARTPHASE;
@@ -29,6 +30,7 @@ struct PlugWah : public AbstractPlugin
       opt.d.min = 0.0;
       opt.d.max = 360.0;
       opt.d.current = startphase;
+      opt.conf_name = "wah_lfo_start_phase";
       dsp_options.push_back(opt);
 
       opt.id = RES;
@@ -36,6 +38,7 @@ struct PlugWah : public AbstractPlugin
       opt.d.min = 0.0;
       opt.d.max = 10.0;
       opt.d.current = res;
+      opt.conf_name = "wah_lfo_resonance";
       dsp_options.push_back(opt);
 
       opt.id = DEPTH;
@@ -43,6 +46,7 @@ struct PlugWah : public AbstractPlugin
       opt.d.min = 0.0;
       opt.d.max = 1.0;
       opt.d.current = depth;
+      opt.conf_name = "wah_lfo_depth";
       dsp_options.push_back(opt);
 
       opt.id = FREQOFS;
@@ -50,7 +54,15 @@ struct PlugWah : public AbstractPlugin
       opt.d.min = 0.0;
       opt.d.max = 0.95;
       opt.d.current = freqofs;
+      opt.conf_name = "wah_lfo_frequency_offset";
       dsp_options.push_back(opt);
+
+      load_options("ssnes_effect.cfg");
+   }
+
+   ~PlugWah()
+   {
+      save_options("ssnes_effect.cfg");
    }
 
    void set_option_double(PluginOption::ID id, double val)
@@ -89,12 +101,11 @@ struct PlugWah : public AbstractPlugin
 
 static void* dsp_init(const ssnes_dsp_info_t *info)
 {
-   ConfigFile cfg("ssnes_effect.cfg");
-   float freq = cfg.get_double("wah_lfo_frequency", 1.5); 
-   float startphase = cfg.get_double("wah_lfo_start_phase", 0.0);
-   float res = cfg.get_double("wah_lfo_resonance", 2.5);
-   float depth = cfg.get_double("wah_lfo_depth", 0.70);
-   float freqofs = cfg.get_double("wah_lfo_frequency_offset", 0.30);
+   float freq = 1.5; 
+   float startphase = 0.0;
+   float res = 2.5;
+   float depth = 0.70;
+   float freqofs = 0.30;
 
    PlugWah *wah = new PlugWah(freq, startphase, res, depth, freqofs);
    wah->wah_l.SetDepth(depth);
