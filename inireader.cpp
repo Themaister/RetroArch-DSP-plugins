@@ -28,7 +28,12 @@ std::string ConfigFile::GetBaseDir()
 {
 #ifdef _WIN32
    char buf[MAX_PATH];
-   GetCurrentDirectory(sizeof(buf), buf);
+   GetModuleFileName(NULL, buf, sizeof(buf));
+   char *ptr = strrchr(buf, '/');
+   if (!ptr)
+      ptr = strrchr(buf, '\\');
+   if (ptr)
+      *ptr = '\0';
    return buf;
 #else
    const char *home = getenv("HOME");
