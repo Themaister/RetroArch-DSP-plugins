@@ -7,7 +7,7 @@ struct PlugVolume : public AbstractPlugin
 {
    PlugVolume() : AbstractPlugin()
    {
-      PluginOption opt = {0};
+      PluginOption opt{};
 
       opt.type = PluginOption::Type::Double;
       opt.id = VOLUME;
@@ -15,6 +15,7 @@ struct PlugVolume : public AbstractPlugin
       opt.d.min = -80.0;
       opt.d.max = +24.0;
       opt.d.current = 0.0;
+      opt.conf_name = "volume_gain";
       dsp_options.push_back(opt);
 
       opt.type = PluginOption::Type::Integer;
@@ -23,15 +24,22 @@ struct PlugVolume : public AbstractPlugin
       opt.i.min = -100;
       opt.i.max = 100;
       opt.i.current = 0;
+      opt.conf_name = "volume_pan";
       dsp_options.push_back(opt);
 
       m_vol = 1.0;
       m_pan_vol_l = 1.0;
       m_pan_vol_r = 1.0;
+
+      load_options("ssnes_effect.cfg");
+   }
+
+   ~PlugVolume()
+   {
+      save_options("ssnes_effect.cfg");
    }
 
    enum IDs : PluginOption::ID { VOLUME, PAN };
-   enum SelIDs : PluginOption::ID { FOO1, FOO2, FOO3 };
 
    void set_option_double(PluginOption::ID id, double val)
    {
