@@ -22,18 +22,26 @@ ThreadWindowImpl::ThreadWindowImpl(std::shared_ptr<Plugin> *plugs,
 {
    setAttribute(Qt::WA_QuitOnClose, false);
    QVBoxLayout *vbox = new QVBoxLayout;
-   vbox->addWidget(new QLabel("DSP plugin config:", this));
+   vbox->addWidget(new QLabel("DSP plugin config:"));
    
    tab = new QTabWidget(this);
    for (unsigned i = 0; i < MetaDSP::max_plugs; i++)
       tab->addTab(new PluginSettings(plugins[i], tab), QString::fromUtf8(plugins[i]->ident().c_str()));
 
    vbox->addWidget(tab);
-   vbox->addSpacing(10);
 
-   vbox->addWidget(new QLabel("WAV recording:", this));
-   WaveRecorder *recorder = new WaveRecorder(this);
-   connect(wave_iface, SIGNAL(data(const float*, size_t)), recorder, SLOT(data(const float*, size_t)));
+   vbox->addSpacing(10);
+   vbox->addWidget(new QLabel("Spectrum analyzer:"));
+   SpectrumAnalyzer *spectrum = new SpectrumAnalyzer;
+   connect(wave_iface, SIGNAL(data(const float*, size_t)),
+         spectrum, SLOT(data(const float*, size_t)));
+   vbox->addWidget(spectrum);
+
+   vbox->addSpacing(10);
+   vbox->addWidget(new QLabel("WAV recording:"));
+   WaveRecorder *recorder = new WaveRecorder;
+   connect(wave_iface, SIGNAL(data(const float*, size_t)),
+         recorder, SLOT(data(const float*, size_t)));
    vbox->addWidget(recorder);
 
    setWindowTitle("SSNES Meta DSP");

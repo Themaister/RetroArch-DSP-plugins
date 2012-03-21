@@ -19,6 +19,7 @@
 #include <QLineEdit>
 #include <QVBoxLayout>
 #include <QComboBox>
+#include <QPixmap>
 
 namespace Global
 {
@@ -149,6 +150,46 @@ class WaveRecorder : public QWidget
 
       void flush_record();
       void update_size();
+};
+
+class PaintWidget : public QWidget
+{
+   Q_OBJECT
+
+   public:
+      PaintWidget(unsigned min_width, unsigned min_height,
+            const QVector<float> &res,
+            QWidget *parent = 0);
+
+   protected:
+      void paintEvent(QPaintEvent*);
+
+   private:
+      const QVector<float> &res;
+};
+
+class SpectrumAnalyzer : public QWidget
+{
+   Q_OBJECT
+
+   public:
+      SpectrumAnalyzer(QWidget *parent = 0);
+
+   public slots:
+      void data(const float *data, size_t frames);
+
+   private slots:
+      void enable(int clicked);
+
+   private:
+      PaintWidget *widget;
+      enum { fft_size = 128 };
+      QVector<float> buffer_l;
+      QVector<float> buffer_r;
+      QVector<float> buffer_res;
+      bool enabled;
+
+      void flush_fft();
 };
 
 class ThreadWindowImpl : public QWidget
