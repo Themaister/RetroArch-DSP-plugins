@@ -183,7 +183,7 @@ class SpectrumAnalyzer : public QWidget
 
    private:
       PaintWidget *widget;
-      enum { fft_size = 128 };
+      enum { fft_size = 1024, fft_freqs = fft_size / 2, bands = 64 };
       QVector<float> buffer_l;
       QVector<float> buffer_r;
       QVector<float> buffer_res;

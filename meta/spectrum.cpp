@@ -4,6 +4,7 @@
 #include <complex>
 #include <cmath>
 #include <QCheckBox>
+#include <QBrush>
 
 PaintWidget::PaintWidget(unsigned min_width, unsigned min_height,
       const QVector<float> &res,
@@ -22,20 +23,38 @@ void PaintWidget::paintEvent(QPaintEvent*)
    paint.begin(this);
    QSize size = this->size();
    paint.setViewport(0, 0, size.width(), size.height());
-   paint.setPen(Qt::black);
+   paint.setPen(Qt::green);
+   QBrush brush(Qt::SolidPattern);
+   brush.setColor(Qt::darkGreen);
+   paint.setBrush(brush);
 
-   paint.drawEllipse(0, 0, 20, 20);
+   float width = (float)size.width() / res.size();
+   float x = 0.0f;
+
+   QVector<QRectF> rects;
+   foreach(float db, res)
+   {
+      float height = size.height() - 1 + 2.0 * db;
+      if (height < 0.0f)
+         height = 0.0f;
+
+      rects.append(QRectF(x, size.height() - 1, width, -height));
+      x += width;
+   }
+
+   paint.drawRects(rects);
 }
 
 SpectrumAnalyzer::SpectrumAnalyzer(QWidget *parent)
-   : QWidget(parent), widget(new PaintWidget(128, 128, buffer_res)), enabled(false)
+   : QWidget(parent), widget(new PaintWidget(256, 128, buffer_res)), enabled(false)
 {
    QVBoxLayout *vbox = new QVBoxLayout;
    QCheckBox *en = new QCheckBox;
    en->setText("Enable");
    connect(en, SIGNAL(stateChanged(int)), this, SLOT(enable(int)));
 
-   buffer_res.resize(fft_size / 2);
+   buffer_res.resize(bands);
+   buffer_res.fill(-100.0f);
 
    vbox->addWidget(en);
    vbox->addWidget(widget);
@@ -127,18 +146,36 @@ namespace FFT
       for (size_t i = 0; i < samples; i++)
          data[i] = 20.0f * std::log10(std::abs(butterfly_buf_l[i]) + std::abs(butterfly_buf_r[i]));
    }
+
+   static void merge_bands(float *out, const float *in, unsigned freqs, unsigned bands)
+   {
+      unsigned ratio = freqs / bands;
+      for (unsigned i = 0; i < bands; i++)
+      {
+         float sum = 0.0f;
+         for (unsigned j = ratio * i; j < ratio * (i + 1); j++)
+            sum += in[j];
+         sum /= ratio;
+         out[i] = sum;
+      }
+   }
 }
 
 void SpectrumAnalyzer::flush_fft()
 {
    QVector<FFT::cdouble> buf_l;
    QVector<FFT::cdouble> buf_r;
+   QVector<float> buf_res;
    buf_l.reserve(fft_size);
    buf_r.reserve(fft_size);
+   buf_res.reserve(fft_freqs);
 
    FFT::calculate(buffer_l.data(), buf_l.data(), fft_size);
    FFT::calculate(buffer_r.data(), buf_r.data(), fft_size);
-   FFT::db(buffer_res.data(), buf_l.data(), buf_r.data(), fft_size);
+   FFT::db(buf_res.data(), buf_l.data(), buf_r.data(), fft_freqs);
+
+   FFT::merge_bands(buffer_res.data(), buf_res.data(), fft_freqs, bands);
+
    widget->repaint();
 }
 
