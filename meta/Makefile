@@ -1,4 +1,4 @@
-TARGET := snes-meta-gui.so
+TARGET := rarch-meta-gui.so
 
 TEST_TARGET := meta-test
 TEST_TARGET_SRC := $(wildcard test/*.cpp) utils.cpp

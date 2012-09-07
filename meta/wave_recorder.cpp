@@ -56,7 +56,7 @@ WaveRecorder::WaveRecorder(QWidget *parent)
    command = new QLineEdit(this);
    vbox->addWidget(command);
 
-   ConfigFile conf("ssnes_effect.cfg");
+   ConfigFile conf("rarch_effect.cfg");
    command->setText(conf.get_string("meta_encoder_command", "").c_str());
 
    setLayout(vbox);
@@ -67,9 +67,9 @@ WaveRecorder::~WaveRecorder()
    stop();
    update_size();
 
-   ConfigFile conf("ssnes_effect.cfg");
+   ConfigFile conf("rarch_effect.cfg");
    conf.set_string("meta_encoder_command", command->text().toUtf8().constData());
-   conf.write("ssnes_effect.cfg");
+   conf.write("rarch_effect.cfg");
 }
 
 void WaveRecorder::data(const float *data, size_t frames)

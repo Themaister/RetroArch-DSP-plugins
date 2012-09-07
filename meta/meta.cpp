@@ -5,9 +5,9 @@
 
 MetaDSP::MetaDSP(float input_rate, float output_rate) : sample_rate(input_rate)
 {
-   ssnes_dsp_info_t info = { sample_rate, sample_rate };
+   rarch_dsp_info_t info = { sample_rate, sample_rate };
    Global::set_dsp_info(info);
-   ConfigFile cfg("ssnes_effect.cfg");
+   ConfigFile cfg("rarch_effect.cfg");
 
    for (unsigned i = 0; i < max_plugs; i++)
    {
@@ -31,14 +31,14 @@ MetaDSP::MetaDSP(float input_rate, float output_rate) : sample_rate(input_rate)
 
 MetaDSP::~MetaDSP()
 {
-   ConfigFile cfg("ssnes_effect.cfg");
+   ConfigFile cfg("rarch_effect.cfg");
    for (unsigned i = 0; i < max_plugs; i++)
    {
       cfg.set_string(Utils::join("meta_plugin", i), plugins[i]->path());
       cfg.set_bool(Utils::join("plugin_enabled", i), plugins[i]->enabled());
    }
 
-   cfg.write("ssnes_effect.cfg");
+   cfg.write("rarch_effect.cfg");
 }
 
 void MetaDSP::log_options() const
@@ -68,13 +68,13 @@ void MetaDSP::events()
 }
 
 // Process the chain.
-void MetaDSP::process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in)
+void MetaDSP::process(rarch_dsp_output_t *out, const rarch_dsp_input_t *in)
 {
 #ifdef META_GUI
    Global::lock();
 #endif
-   ssnes_dsp_input_t input[max_plugs];
-   ssnes_dsp_output_t output[max_plugs];
+   rarch_dsp_input_t input[max_plugs];
+   rarch_dsp_output_t output[max_plugs];
 
    plugins[0]->process(&output[0], in);
 

@@ -1,4 +1,4 @@
-TARGET := snes-meta-gui.dll
+TARGET := rarch-meta-gui.dll
 
 CXXFILES := $(wildcard *.cpp)
 MOCFILES := $(wildcard *.moc.hpp)

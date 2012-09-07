@@ -2,20 +2,20 @@
 
 namespace Global
 {
-   static ssnes_dsp_info_t info;
+   static rarch_dsp_info_t info;
 
-   void set_dsp_info(const ssnes_dsp_info_t &info_)
+   void set_dsp_info(const rarch_dsp_info_t &info_)
    {
       info = info_;
    }
 
-   const ssnes_dsp_info_t& get_dsp_info()
+   const rarch_dsp_info_t& get_dsp_info()
    {
       return info;
    }
 }
 
-Plugin::Plugin(const ssnes_dsp_info_t *info, const char *lib) : 
+Plugin::Plugin(const rarch_dsp_info_t *info, const char *lib) : 
    plug(nullptr), plug_handle(nullptr), is_enabled(true), plug_path(lib)
 {
    if (!lib)
@@ -25,7 +25,7 @@ Plugin::Plugin(const ssnes_dsp_info_t *info, const char *lib) :
    if (!library)
       return;
 
-   plug_init_t init = library.sym<plug_init_t>("ssnes_dsp_plugin_init");
+   plug_init_t init = library.sym<plug_init_t>("rarch_dsp_plugin_init");
 
    if (!init)
       return;
@@ -40,7 +40,7 @@ Plugin::Plugin(const ssnes_dsp_info_t *info, const char *lib) :
 Plugin::Plugin() : plug(nullptr), plug_handle(nullptr), is_enabled(true)
 {}
 
-void Plugin::process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in)
+void Plugin::process(rarch_dsp_output_t *out, const rarch_dsp_input_t *in)
 {
    if (plug_handle && is_enabled)
       plug->process(plug_handle, out, in);
@@ -48,7 +48,7 @@ void Plugin::process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in)
    {
       out->samples = in->samples;
       out->frames = in->frames;
-      out->should_resample = SSNES_TRUE;
+      out->should_resample = RARCH_TRUE;
    }
 }
 

@@ -1,7 +1,7 @@
 #ifndef __PLUGIN_HPP
 #define __PLUGIN_HPP
 
-#include "../ssnes_dsp.h"
+#include "../rarch_dsp.h"
 #include "library.hpp"
 #include <stddef.h>
 #include <string>
@@ -10,21 +10,21 @@
 
 namespace Global
 {
-   void set_dsp_info(const ssnes_dsp_info_t &info);
-   const ssnes_dsp_info_t& get_dsp_info();
+   void set_dsp_info(const rarch_dsp_info_t &info);
+   const rarch_dsp_info_t& get_dsp_info();
 }
 
 class Plugin
 {
    public:
-      Plugin(const ssnes_dsp_info_t *info, const char *lib = nullptr);
+      Plugin(const rarch_dsp_info_t *info, const char *lib = nullptr);
       Plugin();
       ~Plugin();
 
       void operator=(Plugin&) = delete;
       Plugin(const Plugin&) = delete;
 
-      void process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in);
+      void process(rarch_dsp_output_t *out, const rarch_dsp_input_t *in);
       void show();
       std::string ident() const;
       const std::string& path() const;
@@ -42,10 +42,10 @@ class Plugin
 
    private:
       Library library;
-      const ssnes_dsp_plugin_t *plug;
+      const rarch_dsp_plugin_t *plug;
       void *plug_handle;
 
-      typedef const ssnes_dsp_plugin_t* (*plug_init_t)(void);
+      typedef const rarch_dsp_plugin_t* (*plug_init_t)(void);
 
       bool is_enabled;
       std::string plug_path;

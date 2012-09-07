@@ -2,7 +2,7 @@
 #define __META_HPP
 
 // A meta plugin that chains other DSPs ... Pretty much
-#include "../ssnes_dsp.h"
+#include "../rarch_dsp.h"
 
 #include "plugin.hpp"
 #include <memory>
@@ -20,7 +20,7 @@ class MetaDSP
       void show();
       void events();
       // One process that does it all.
-      void process(ssnes_dsp_output_t *out, const ssnes_dsp_input_t *in);
+      void process(rarch_dsp_output_t *out, const rarch_dsp_input_t *in);
 
       enum { max_plugs = 8 };
 

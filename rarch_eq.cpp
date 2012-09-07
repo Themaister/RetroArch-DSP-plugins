@@ -1,4 +1,4 @@
-#include "ssnes_dsp.h"
+#include "rarch_dsp.h"
 #include <iostream>
 #include "abstract_plugin.hpp"
 #include <math.h>
@@ -116,20 +116,20 @@ struct PlugEQ : public AbstractPlugin
 #endif
 };
 
-static void *dsp_init(const ssnes_dsp_info_t *info)
+static void *dsp_init(const rarch_dsp_info_t *info)
 {
    return new PlugEQ(info->input_rate);
 }
 
-static void dsp_process(void *data, ssnes_dsp_output_t *output,
-      const ssnes_dsp_input *input)
+static void dsp_process(void *data, rarch_dsp_output_t *output,
+      const rarch_dsp_input *input)
 {
    PlugEQ *eq = reinterpret_cast<PlugEQ*>(data);
 
    output->samples = eq->buf;
    eq->process(input->samples, input->frames);
    output->frames = input->frames;
-   output->should_resample = SSNES_TRUE;
+   output->should_resample = RARCH_TRUE;
 }
 
 static void dsp_free(void *data)
@@ -140,16 +140,16 @@ static void dsp_free(void *data)
 static void dsp_config(void *)
 {}
 
-const ssnes_dsp_plugin_t dsp_plug = {
+const rarch_dsp_plugin_t dsp_plug = {
    dsp_init,
    dsp_process,
    dsp_free,
-   SSNES_DSP_API_VERSION,
+   RARCH_DSP_API_VERSION,
    dsp_config,
    "Equalizer"
 };
 
-SSNES_API_EXPORT const ssnes_dsp_plugin_t* SSNES_API_CALLTYPE ssnes_dsp_plugin_init(void)
+RARCH_API_EXPORT const rarch_dsp_plugin_t* RARCH_API_CALLTYPE rarch_dsp_plugin_init(void)
 {
    return &dsp_plug;
 }

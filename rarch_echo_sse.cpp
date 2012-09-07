@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include "ssnes_dsp.h"
+#include "rarch_dsp.h"
 #include <algorithm>
 #include <iterator>
 #include <type_traits>
@@ -108,12 +108,12 @@ struct EchoFilter : public AbstractPlugin
       opt.conf_name = "echo_sse_feedback";
       dsp_options.push_back(opt);
 
-      load_options("ssnes_effect.cfg");
+      load_options("rarch_effect.cfg");
    }
 
    ~EchoFilter()
    {
-      save_options("ssnes_effect.cfg");
+      save_options("rarch_effect.cfg");
    }
 
    void set_option_double(PluginOption::ID id, double val)
@@ -221,8 +221,8 @@ struct EchoFilter : public AbstractPlugin
    }
 };
 
-static void dsp_process(void *data, ssnes_dsp_output_t *output,
-      const ssnes_dsp_input_t *input)
+static void dsp_process(void *data, rarch_dsp_output_t *output,
+      const rarch_dsp_input_t *input)
 {
    EchoFilter *echo = reinterpret_cast<EchoFilter*>(data);
    output->samples = echo->buffer;
@@ -235,7 +235,7 @@ static void dsp_process(void *data, ssnes_dsp_output_t *output,
    echo->timer.stop(input->frames);
 #endif
 
-   output->should_resample = SSNES_TRUE;
+   output->should_resample = RARCH_TRUE;
 }
 
 static void dsp_free(void *data)
@@ -243,7 +243,7 @@ static void dsp_free(void *data)
    delete reinterpret_cast<EchoFilter*>(data);
 }
 
-static void *dsp_init(const ssnes_dsp_info_t *info)
+static void *dsp_init(const rarch_dsp_info_t *info)
 {
    EchoFilter *echo = new EchoFilter;
 
@@ -260,15 +260,15 @@ static void *dsp_init(const ssnes_dsp_info_t *info)
 static void dsp_config(void *)
 {}
 
-static const ssnes_dsp_plugin_t dsp_plug = {
+static const rarch_dsp_plugin_t dsp_plug = {
    dsp_init,
    dsp_process,
    dsp_free,
-   SSNES_DSP_API_VERSION,
+   RARCH_DSP_API_VERSION,
    dsp_config,
    "Echo plugin (SSE2)"
 };
 
-SSNES_API_EXPORT const ssnes_dsp_plugin_t* SSNES_API_CALLTYPE
-   ssnes_dsp_plugin_init(void) { return &dsp_plug; }
+RARCH_API_EXPORT const rarch_dsp_plugin_t* RARCH_API_CALLTYPE
+   rarch_dsp_plugin_init(void) { return &dsp_plug; }
 
