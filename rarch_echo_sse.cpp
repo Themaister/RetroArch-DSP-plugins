@@ -191,7 +191,7 @@ struct EchoFilter : public AbstractPlugin
          for (unsigned i = scratch_ptr; i < 4; i += 2)
          {
             scratch_buf[i] = *input++;
-            scratch_buf[i] = *input++;
+            scratch_buf[i + 1] = *input++;
             frames--;
          }
 
