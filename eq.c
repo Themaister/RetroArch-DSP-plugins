@@ -1,20 +1,12 @@
 #include "eq.h"
 
 #include <stdlib.h>
-#include <math.h>
 #include <complex.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <assert.h>
 #include <string.h>
-
-#ifndef M_PI
-#define M_PI 3.14159265
-#endif
-
-#define COEFF_SIZE 256
-#define FILT_SIZE (COEFF_SIZE * 2)
 
 static complex float phase_lut[2 * FILT_SIZE + 1];
 static complex float * const phase_lut_ptr = phase_lut + FILT_SIZE;

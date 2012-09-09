@@ -3,6 +3,15 @@
 
 typedef struct dsp_eq_state dsp_eq_state_t;
 #include <stddef.h>
+#include <math.h>
+
+#ifndef M_PI
+#define M_PI 3.14159265
+#endif
+
+#define COEFF_SIZE 256
+#define FILT_SIZE (COEFF_SIZE * 2)
+
 
 #ifdef __cplusplus
 extern "C" {
