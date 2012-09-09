@@ -144,7 +144,7 @@ static void recalculate_fft_filt(dsp_eq_state_t *eq)
    for (unsigned i = 0; i < eq->num_bands; i++)
    {
       for (unsigned j = eq->bands[i].min_bin; j <= eq->bands[i].max_bin; j++)
-         freq_response[j] = 0.5 * eq->bands[i].gain;
+         freq_response[j] = eq->bands[i].gain;
    }
 
    memset(eq->fft_coeffs, 0, sizeof(eq->fft_coeffs));
