@@ -7,8 +7,8 @@ ifeq ($(DEBUG), 1)
    CXXFLAGS += -O0
    CFLAGS += -O0
 else
-   CXXFLAGS += -O3
-   CFLAGS += -O3
+   CXXFLAGS += -O3 -ffast-math
+   CFLAGS += -O3 -ffast-math
 endif
 
 ifneq ($(PERF_TEST),)
