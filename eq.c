@@ -13,7 +13,7 @@
 #define M_PI 3.14159265
 #endif
 
-#define COEFF_SIZE 128
+#define COEFF_SIZE 256
 #define FILT_SIZE (COEFF_SIZE * 2)
 
 static inline unsigned bitrange(unsigned len)
@@ -36,7 +36,7 @@ static inline unsigned bitswap(unsigned i, unsigned range)
 
 // When interleaving the butterfly buffer, addressing puts bits in reverse.
 // [0, 1, 2, 3, 4, 5, 6, 7] => [0, 4, 2, 6, 1, 5, 3, 7] 
-static void interleave(complex double *butterfly_buf, size_t samples)
+static void interleave(complex float *butterfly_buf, size_t samples)
 {
    unsigned range = bitrange(samples);
    for (unsigned i = 0; i < samples; i++)
@@ -44,35 +44,35 @@ static void interleave(complex double *butterfly_buf, size_t samples)
       unsigned target = bitswap(i, range);
       if (target > i)
       {
-         complex double tmp = butterfly_buf[target];
+         complex float tmp = butterfly_buf[target];
          butterfly_buf[target] = butterfly_buf[i];
          butterfly_buf[i] = tmp;
       }
    }
 }
 
-static complex double gen_phase(float index)
+static complex float gen_phase(float index)
 {
    return cexpf(M_PI * I * index);
 }
 
-static void butterfly(complex double *a, complex double *b, complex double mod)
+static void butterfly(complex float *a, complex float *b, complex float mod)
 {
    mod *= *b;
-   complex double a_ = *a + mod;
-   complex double b_ = *a - mod;
+   complex float a_ = *a + mod;
+   complex float b_ = *a - mod;
    *a = a_;
    *b = b_;
 }
 
-static void butterflies(complex double *butterfly_buf, float phase_dir, size_t step_size, size_t samples)
+static void butterflies(complex float *butterfly_buf, float phase_dir, size_t step_size, size_t samples)
 {
    for (unsigned i = 0; i < samples; i += 2 * step_size)
       for (unsigned j = i; j < i + step_size; j++)
          butterfly(&butterfly_buf[j], &butterfly_buf[j + step_size], gen_phase((phase_dir * (j - i)) / step_size));
 }
 
-static void calculate_fft_butterfly(complex double *butterfly_buf, size_t samples)
+static void calculate_fft_butterfly(complex float *butterfly_buf, size_t samples)
 {
    // Interleave buffer to work with FFT.
    interleave(butterfly_buf, samples);
@@ -82,7 +82,7 @@ static void calculate_fft_butterfly(complex double *butterfly_buf, size_t sample
       butterflies(butterfly_buf, -1.0, step_size, samples);
 }
 
-static void calculate_fft(const float *data, complex double *butterfly_buf, size_t samples)
+static void calculate_fft(const float *data, complex float *butterfly_buf, size_t samples)
 {
    for (unsigned i = 0; i < samples; i++)
       butterfly_buf[i] = data[i];
@@ -95,7 +95,7 @@ static void calculate_fft(const float *data, complex double *butterfly_buf, size
       butterflies(butterfly_buf, -1.0, step_size, samples);
 }
 
-static void calculate_ifft(complex double *butterfly_buf, size_t samples)
+static void calculate_ifft(complex float *butterfly_buf, size_t samples)
 {
    // Interleave buffer to work with FFT.
    interleave(butterfly_buf, samples);
@@ -121,7 +121,7 @@ struct dsp_eq_state
    struct eq_band *bands;
    unsigned num_bands;
 
-   complex double fft_coeffs[FILT_SIZE];
+   complex float fft_coeffs[FILT_SIZE];
    float cosine_window[COEFF_SIZE];
 
    float last_buf[COEFF_SIZE];
@@ -139,7 +139,7 @@ static void calculate_band_range(struct eq_band *band, float norm_freq)
 
 static void recalculate_fft_filt(dsp_eq_state_t *eq)
 {
-   complex double freq_response[FILT_SIZE] = {0.0f};
+   complex float freq_response[FILT_SIZE] = {0.0f};
 
    for (unsigned i = 0; i < eq->num_bands; i++)
    {
@@ -155,8 +155,8 @@ static void recalculate_fft_filt(dsp_eq_state_t *eq)
    calculate_ifft(freq_response, COEFF_SIZE);
 
    // ifftshift(). Needs to be done for some reason ... TODO: Figure out why :D
-   memcpy(eq->fft_coeffs + COEFF_SIZE / 2, freq_response +              0, COEFF_SIZE / 2 * sizeof(complex double));
-   memcpy(eq->fft_coeffs +              0, freq_response + COEFF_SIZE / 2, COEFF_SIZE / 2 * sizeof(complex double));
+   memcpy(eq->fft_coeffs + COEFF_SIZE / 2, freq_response +              0, COEFF_SIZE / 2 * sizeof(complex float));
+   memcpy(eq->fft_coeffs +              0, freq_response + COEFF_SIZE / 2, COEFF_SIZE / 2 * sizeof(complex float));
 
    for (unsigned i = 0; i < COEFF_SIZE; i++)
       eq->fft_coeffs[i] *= eq->cosine_window[i];
@@ -219,34 +219,46 @@ void dsp_eq_set_gain(dsp_eq_state_t *eq, unsigned band, float gain)
    recalculate_fft_filt(eq);
 }
 
-size_t dsp_eq_process(dsp_eq_state_t *eq, float *output, size_t out_samples, float sample)
+size_t dsp_eq_process(dsp_eq_state_t *eq, float *output, size_t out_samples,
+      const float *input, size_t in_samples, unsigned stride)
 {
-   eq->stage_buf[eq->stage_ptr++] = sample;
-
-   if (eq->stage_ptr >= COEFF_SIZE)
+   size_t written = 0;
+   while (in_samples)
    {
-      if (out_samples < COEFF_SIZE)
-         return 0;
+      size_t to_read = COEFF_SIZE - eq->stage_ptr;
 
-      complex double butterfly_buf[FILT_SIZE];
-      calculate_fft(eq->stage_buf, butterfly_buf, FILT_SIZE);
-      for (unsigned i = 0; i < FILT_SIZE; i++)
-         butterfly_buf[i] *= eq->fft_coeffs[i];
+      if (to_read > in_samples)
+         to_read = in_samples;
 
-      calculate_ifft(butterfly_buf, FILT_SIZE);
+      for (unsigned i = 0; i < to_read; i++, input += stride)
+         eq->stage_buf[eq->stage_ptr + i] = *input;
 
-      for (unsigned i = 0; i < COEFF_SIZE; i++)
-         output[i] = crealf(butterfly_buf[i]) + eq->last_buf[i];
+      in_samples    -= to_read;
+      eq->stage_ptr += to_read;
 
-      for (unsigned i = 0; i < COEFF_SIZE; i++)
-         eq->last_buf[i] = crealf(butterfly_buf[i + COEFF_SIZE]);
+      if (eq->stage_ptr >= COEFF_SIZE)
+      {
+         if (out_samples < COEFF_SIZE)
+            return written;
 
-      eq->stage_ptr = 0;
+         complex float butterfly_buf[FILT_SIZE];
+         calculate_fft(eq->stage_buf, butterfly_buf, FILT_SIZE);
+         for (unsigned i = 0; i < FILT_SIZE; i++)
+            butterfly_buf[i] *= eq->fft_coeffs[i];
 
-      return COEFF_SIZE;
+         calculate_ifft(butterfly_buf, FILT_SIZE);
+
+         for (unsigned i = 0; i < COEFF_SIZE; i++, output += stride, out_samples--, written++)
+            *output = crealf(butterfly_buf[i]) + eq->last_buf[i];
+
+         for (unsigned i = 0; i < COEFF_SIZE; i++)
+            eq->last_buf[i] = crealf(butterfly_buf[i + COEFF_SIZE]);
+
+         eq->stage_ptr = 0;
+      }
    }
-   else
-      return 0;
+
+   return written;
 }
 
 void dsp_eq_free(dsp_eq_state_t *eq)

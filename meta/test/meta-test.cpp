@@ -1,4 +1,4 @@
-#include "../../ssnes_dsp.h"
+#include "../../rarch_dsp.h"
 #include "../utils.h"
 #include <unistd.h>
 #include <sys/poll.h>
@@ -12,15 +12,17 @@ int main(int argc, char **argv)
 {
    assert(argc == 2);
 
+   fprintf(stderr, "Loading library: %s\n", argv[1]);
+
    void *lib = dlopen(argv[1], RTLD_LAZY);
    assert(lib);
-   auto plug_init = (const ssnes_dsp_plugin_t *(*)(void))dlsym(lib, "ssnes_dsp_plugin_init");
+   auto plug_init = (const rarch_dsp_plugin_t *(*)(void))dlsym(lib, "rarch_dsp_plugin_init");
    assert(plug_init);
 
    auto driver = plug_init();
    assert(driver);
 
-   ssnes_dsp_info_t info = {
+   rarch_dsp_info_t info = {
       44100.0,
       44100.0
    };
@@ -67,8 +69,8 @@ int main(int argc, char **argv)
       for (unsigned i = 0; i < 512; i++)
          fbuf[i] = (float)buf[i] / 0x8000;
 
-      ssnes_dsp_output_t output;
-      ssnes_dsp_input_t input = { fbuf, 256 };
+      rarch_dsp_output_t output;
+      rarch_dsp_input_t input = { fbuf, 256 };
 
       driver->process(plug, &output, &input);
 
