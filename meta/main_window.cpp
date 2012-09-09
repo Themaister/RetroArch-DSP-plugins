@@ -44,7 +44,7 @@ ThreadWindowImpl::ThreadWindowImpl(std::shared_ptr<Plugin> *plugs,
          recorder, SLOT(data(const float*, size_t)));
    vbox->addWidget(recorder);
 
-   setWindowTitle("SSNES Meta DSP");
+   setWindowTitle("RetroArch Meta DSP");
    setLayout(vbox);
 }
 
