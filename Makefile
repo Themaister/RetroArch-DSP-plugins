@@ -1,4 +1,4 @@
-TARGETS = rarch_reverb.so rarch_wah.so rarch_phaser.so rarch_iir.so rarch_echo.so rarch_echo_sse.so rarch_volume.so rarch_eq.so
+TARGETS = rarch_reverb.so rarch_wah.so rarch_phaser.so rarch_iir.so rarch_echo_sse.so rarch_volume.so rarch_eq.so
 
 CXXFLAGS += -O3 -g -fPIC -Wall -pedantic -std=gnu++0x
 CFLAGS += -O3 -g -fPIC -Wall -pedantic -std=gnu99
@@ -18,7 +18,6 @@ RARCH_REVERB_OBJ = rarch_reverb.o freeverb.o $(INIREAD_OBJ)
 RARCH_WAH_OBJ = rarch_wah.o wahwah.o $(INIREAD_OBJ)
 RARCH_PHASER_OBJ = rarch_phaser.o phaser.o $(INIREAD_OBJ)
 RARCH_IIR_OBJ = rarch_iir.o iirfilters.o $(INIREAD_OBJ)
-RARCH_ECHO_OBJ = rarch_echo.o echo.o $(INIREAD_OBJ)
 RARCH_ECHO_SSE_OBJ = rarch_echo_sse.o $(INIREAD_OBJ)
 RARCH_VOLUME_OBJ = rarch_volume.o $(INIREAD_OBJ)
 RARCH_EQ_OBJ = rarch_eq.o eq.o
@@ -36,9 +35,6 @@ rarch_phaser.so: $(RARCH_PHASER_OBJ)
 
 rarch_iir.so: $(RARCH_IIR_OBJ)
 	$(CXX) -o $@ $(RARCH_IIR_OBJ) $(LDFLAGS)
-
-rarch_echo.so: $(RARCH_ECHO_OBJ)
-	$(CXX) -o $@ $(RARCH_ECHO_OBJ) $(LDFLAGS)
 
 rarch_echo_sse.so: $(RARCH_ECHO_SSE_OBJ)
 	$(CXX) -o $@ $(RARCH_ECHO_SSE_OBJ) $(LDFLAGS)
