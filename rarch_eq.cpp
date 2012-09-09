@@ -70,24 +70,40 @@ struct PlugEQ : public AbstractPlugin
 
    void set_option_double(PluginOption::ID id, double val)
    {
+      std::cerr << "Setting ID: " << static_cast<unsigned>(id) << std::endl;
       dsp_eq_set_gain(eq_l, id, db2gain(val));
       dsp_eq_set_gain(eq_r, id, db2gain(val));
    }
 
-   float buf[4096];
+   float buf_l[4096];
+   float buf_r[4096];
+   float out_buffer[8092];
 
-   void process(const float *in, unsigned frames)
+   size_t process(const float *in, unsigned frames)
    {
 #ifdef PERF_TEST
       struct timespec tv_old;
       struct timespec tv_new;
       clock_gettime(CLOCK_MONOTONIC, &tv_old);
 #endif
+
+      float *buffer_l = buf_l;
+      float *buffer_r = buf_r;
+
       for (unsigned i = 0; i < frames; i++)
       {
-         buf[(i << 1) + 0] = dsp_eq_process(eq_l, in[(i << 1) + 0]);
-         buf[(i << 1) + 1] = dsp_eq_process(eq_r, in[(i << 1) + 1]);
+         buffer_l += dsp_eq_process(eq_l, buffer_l, buf_l + 4096 - buffer_l, in[(i << 1) + 0]);
+         buffer_r += dsp_eq_process(eq_r, buffer_r, buf_r + 4096 - buffer_r, in[(i << 1) + 1]);
       }
+
+      size_t out_samp = buffer_l - buf_l;
+
+      for (unsigned i = 0; i < out_samp; i++)
+      {
+         out_buffer[(i << 1) + 0] = buf_l[i];
+         out_buffer[(i << 1) + 1] = buf_r[i];
+      }
+
 #ifdef PERF_TEST
       clock_gettime(CLOCK_MONOTONIC, &tv_new);
       double time = (double)(tv_new.tv_sec - tv_old.tv_sec) + (tv_new.tv_nsec - tv_old.tv_nsec) / 1000000000.0;
@@ -95,6 +111,8 @@ struct PlugEQ : public AbstractPlugin
       process_frames += frames;
       fprintf(stderr, "[Equalizer]: Processing @ %10.0f frames/s.\n", static_cast<float>(process_frames/process_time));
 #endif
+
+      return out_samp;
    }
 
    static float db2gain(float val)
@@ -126,9 +144,9 @@ static void dsp_process(void *data, rarch_dsp_output_t *output,
 {
    PlugEQ *eq = reinterpret_cast<PlugEQ*>(data);
 
-   output->samples = eq->buf;
-   eq->process(input->samples, input->frames);
-   output->frames = input->frames;
+   output->samples = eq->out_buffer;
+   size_t out_frames = eq->process(input->samples, input->frames);
+   output->frames = out_frames;
    output->should_resample = RARCH_TRUE;
 }
 
