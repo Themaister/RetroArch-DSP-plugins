@@ -3,6 +3,7 @@
 #include "abstract_plugin.hpp"
 #include <math.h>
 #include "eq.h"
+#include "utils.hpp"
 #include <stdlib.h>
 
 #ifdef PERF_TEST
@@ -51,12 +52,16 @@ struct PlugEQ : public AbstractPlugin
          opt.d.min = -50.0;
          opt.d.max = 20.0;
          opt.d.current = 0.0;
+         opt.conf_name = Utils::join("eq_band_", i);
          dsp_options.push_back(opt);
       }
+
+      load_options("rarch_effect.cfg");
    }
 
    ~PlugEQ()
    {
+      save_options("rarch_effect.cfg");
       dsp_eq_free(eq_l);
       dsp_eq_free(eq_r);
    }

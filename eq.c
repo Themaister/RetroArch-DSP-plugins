@@ -16,6 +16,18 @@
 #define COEFF_SIZE 256
 #define FILT_SIZE (COEFF_SIZE * 2)
 
+static complex float phase_lut[2 * FILT_SIZE + 1];
+static complex float * const phase_lut_ptr = phase_lut + FILT_SIZE;
+
+static void generate_phase_lut(void)
+{
+   for (int i = -FILT_SIZE; i <= FILT_SIZE; i++)
+   {
+      float phase = (float)i / FILT_SIZE;
+      phase_lut_ptr[i] = cexpf(M_PI * I * phase);
+   }
+}
+
 static inline unsigned bitrange(unsigned len)
 {
    unsigned ret = 0;
@@ -51,11 +63,6 @@ static void interleave(complex float *butterfly_buf, size_t samples)
    }
 }
 
-static complex float gen_phase(float index)
-{
-   return cexpf(M_PI * I * index);
-}
-
 static void butterfly(complex float *a, complex float *b, complex float mod)
 {
    mod *= *b;
@@ -65,11 +72,14 @@ static void butterfly(complex float *a, complex float *b, complex float mod)
    *b = b_;
 }
 
-static void butterflies(complex float *butterfly_buf, float phase_dir, size_t step_size, size_t samples)
+static void butterflies(complex float *butterfly_buf, int phase_dir, size_t step_size, size_t samples)
 {
    for (unsigned i = 0; i < samples; i += 2 * step_size)
+   {
+      int phase_step = FILT_SIZE * phase_dir / (int)step_size;
       for (unsigned j = i; j < i + step_size; j++)
-         butterfly(&butterfly_buf[j], &butterfly_buf[j + step_size], gen_phase((phase_dir * (j - i)) / step_size));
+         butterfly(&butterfly_buf[j], &butterfly_buf[j + step_size], phase_lut_ptr[phase_step * (int)(j - i)]);
+   }
 }
 
 static void calculate_fft_butterfly(complex float *butterfly_buf, size_t samples)
@@ -79,7 +89,7 @@ static void calculate_fft_butterfly(complex float *butterfly_buf, size_t samples
 
    // Fly, lovely butterflies! :D
    for (unsigned step_size = 1; step_size < samples; step_size *= 2)
-      butterflies(butterfly_buf, -1.0, step_size, samples);
+      butterflies(butterfly_buf, -1, step_size, samples);
 }
 
 static void calculate_fft(const float *data, complex float *butterfly_buf, size_t samples)
@@ -92,7 +102,7 @@ static void calculate_fft(const float *data, complex float *butterfly_buf, size_
 
    // Fly, lovely butterflies! :D
    for (unsigned step_size = 1; step_size < samples; step_size *= 2)
-      butterflies(butterfly_buf, -1.0, step_size, samples);
+      butterflies(butterfly_buf, -1, step_size, samples);
 }
 
 static void calculate_ifft(complex float *butterfly_buf, size_t samples)
@@ -102,7 +112,7 @@ static void calculate_ifft(complex float *butterfly_buf, size_t samples)
 
    // Fly, lovely butterflies! In opposite direction! :D
    for (unsigned step_size = 1; step_size < samples; step_size *= 2)
-      butterflies(butterfly_buf, 1.0, step_size, samples);
+      butterflies(butterfly_buf, 1, step_size, samples);
 
    float factor = 1.0 / samples;
    for (unsigned i = 0; i < samples; i++)
@@ -192,7 +202,9 @@ dsp_eq_state_t *dsp_eq_new(float input_rate, const float *bands, unsigned num_ba
    {
       calculate_band_range(&state->bands[i], ((bands[i + 1] + bands[i + 0]) / 2.0) / input_rate);
       state->bands[i].min_bin = state->bands[i - 1].max_bin + 1;
-      assert(state->bands[i].max_bin >= state->bands[i].min_bin);
+
+      if (state->bands[i].max_bin < state->bands[i].min_bin)
+         fprintf(stderr, "[Equalizer]: Band @ %.2f Hz does not have enough spectral resolution to fit.\n", bands[i]);
    }
 
    state->bands[num_bands - 1].max_bin = COEFF_SIZE / 2;
@@ -202,6 +214,7 @@ dsp_eq_state_t *dsp_eq_new(float input_rate, const float *bands, unsigned num_ba
    for (unsigned i = 0; i < COEFF_SIZE; i++)
       state->cosine_window[i] = cosf(M_PI * (i + 0.5 - COEFF_SIZE / 2) / COEFF_SIZE);
 
+   generate_phase_lut();
    recalculate_fft_filt(state);
 
    return state;

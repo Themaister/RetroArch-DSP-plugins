@@ -1,7 +1,15 @@
 TARGETS = rarch_reverb.so rarch_wah.so rarch_phaser.so rarch_iir.so rarch_echo_sse.so rarch_volume.so rarch_eq.so
 
-CXXFLAGS += -O3 -g -fPIC -Wall -pedantic -std=gnu++0x
-CFLAGS += -O3 -g -fPIC -Wall -pedantic -std=gnu99
+CXXFLAGS += -g -fPIC -Wall -pedantic -std=gnu++0x
+CFLAGS += -g -fPIC -Wall -pedantic -std=gnu99
+
+ifeq ($(DEBUG), 1)
+   CXXFLAGS += -O0
+   CFLAGS += -O0
+else
+   CXXFLAGS += -O3
+   CFLAGS += -O3
+endif
 
 ifneq ($(PERF_TEST),)
    CXXFLAGS += -DPERF_TEST
@@ -20,7 +28,7 @@ RARCH_PHASER_OBJ = rarch_phaser.o phaser.o $(INIREAD_OBJ)
 RARCH_IIR_OBJ = rarch_iir.o iirfilters.o $(INIREAD_OBJ)
 RARCH_ECHO_SSE_OBJ = rarch_echo_sse.o $(INIREAD_OBJ)
 RARCH_VOLUME_OBJ = rarch_volume.o $(INIREAD_OBJ)
-RARCH_EQ_OBJ = rarch_eq.o eq.o
+RARCH_EQ_OBJ = rarch_eq.o eq.o $(INIREAD_OBJ)
 
 LDFLAGS += -shared -Wl,--no-undefined
 
