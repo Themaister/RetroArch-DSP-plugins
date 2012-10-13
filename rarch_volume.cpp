@@ -117,7 +117,6 @@ static void dsp_process(void *data, rarch_dsp_output_t *output,
    output->samples = vol->buf;
    vol->process(input->samples, input->frames);
    output->frames = input->frames;
-   output->should_resample = RARCH_TRUE;
 }
 
 static void dsp_free(void *data)

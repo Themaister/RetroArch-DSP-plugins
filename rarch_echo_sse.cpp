@@ -234,8 +234,6 @@ static void dsp_process(void *data, rarch_dsp_output_t *output,
 #ifdef PERF_TEST
    echo->timer.stop(input->frames);
 #endif
-
-   output->should_resample = RARCH_TRUE;
 }
 
 static void dsp_free(void *data)

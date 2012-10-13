@@ -48,7 +48,6 @@ void Plugin::process(rarch_dsp_output_t *out, const rarch_dsp_input_t *in)
    {
       out->samples = in->samples;
       out->frames = in->frames;
-      out->should_resample = RARCH_TRUE;
    }
 }
 
