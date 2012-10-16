@@ -3,9 +3,9 @@
 #include "../utils.hpp"
 #include <iostream>
 
-MetaDSP::MetaDSP(float input_rate, float output_rate) : sample_rate(input_rate)
+MetaDSP::MetaDSP(float input_rate) : sample_rate(input_rate)
 {
-   rarch_dsp_info_t info = { sample_rate, sample_rate };
+   rarch_dsp_info_t info = { sample_rate };
    Global::set_dsp_info(info);
    ConfigFile cfg("rarch_effect.cfg");
 
@@ -16,8 +16,6 @@ MetaDSP::MetaDSP(float input_rate, float output_rate) : sample_rate(input_rate)
          plugins[i] = std::make_shared<Plugin>();
       plugins[i]->enabled(cfg.get_bool(Utils::join("plugin_enabled", i), true));
    }
-
-   info.output_rate = output_rate;
 
    resampler_plugin = std::make_shared<Plugin>(&info,
          cfg.get_string("meta_resampler_plugin", "").c_str());

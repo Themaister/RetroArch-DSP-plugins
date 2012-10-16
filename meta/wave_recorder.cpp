@@ -99,7 +99,7 @@ void WaveRecorder::update_size()
    if (is_recording)
    {
       uint64_t seconds = (file.size() - 44) /
-         (2 * sizeof(int16_t) * Global::get_dsp_info().output_rate);
+         (2 * sizeof(int16_t) * Global::get_dsp_info().input_rate);
 
       uint64_t minutes = seconds / 60;
       uint64_t hours = minutes / 60;
@@ -157,7 +157,7 @@ void WaveRecorder::start()
       }
    }
 
-   uint32_t rate = Global::get_dsp_info().output_rate;
+   uint32_t rate = Global::get_dsp_info().input_rate;
    uint32_t byte_rate = rate * 2 * sizeof(int16_t);
 
    const uint8_t wave_header[44] = {

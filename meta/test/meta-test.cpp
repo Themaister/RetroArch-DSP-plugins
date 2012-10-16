@@ -63,14 +63,15 @@ int main(int argc, char **argv)
          continue;
       }
 
-      if (read(0, buf, 1024) < 1024)
+      int ret;
+      if ((ret = read(0, buf, 1024)) <= 0)
          break;
 
-      for (unsigned i = 0; i < 512; i++)
+      for (unsigned i = 0; i < ret / 2; i++)
          fbuf[i] = (float)buf[i] / 0x8000;
 
       rarch_dsp_output_t output;
-      rarch_dsp_input_t input = { fbuf, 256 };
+      rarch_dsp_input_t input = { fbuf, static_cast<unsigned>(ret) / 4 };
 
       driver->process(plug, &output, &input);
 
@@ -78,7 +79,6 @@ int main(int argc, char **argv)
          driver->events(plug);
 
       assert(output.frames <= 1024);
-
       audio_convert_float_to_s16(buf, output.samples, output.frames * 2);
 
       if (write(1, buf, sizeof(int16_t) * output.frames * 2) < (sizeof(int16_t) * output.frames * 2))

@@ -20,7 +20,7 @@ static void dsp_process(void *handle, rarch_dsp_output_t *out, const rarch_dsp_i
 
 static void *dsp_init(const rarch_dsp_info_t *info)
 {
-   return new MetaDSP(info->input_rate, info->output_rate);
+   return new MetaDSP(info->input_rate);
 }
 
 static void dsp_events(void *handle)

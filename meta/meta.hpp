@@ -15,7 +15,7 @@
 class MetaDSP
 {
    public:
-      MetaDSP(float input_rate, float output_rate);
+      MetaDSP(float input_rate);
       ~MetaDSP();
       void show();
       void events();
