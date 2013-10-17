@@ -12,6 +12,8 @@ HEADERS := $(wildcard *.hpp)
 QT_CXXFLAGS := $(shell pkg-config --cflags QtCore QtGui)
 QT_LIBS := $(shell pkg-config --libs QtCore QtGui)
 
+MOC = moc-qt4
+
 INCLUDES := -I.
 
 all: $(TARGET)
@@ -26,7 +28,7 @@ test/%.o: test/%.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) $(QT_CXXFLAGS) $(INCLUDES) -DMETA_GUI -fPIC -O3 -std=gnu++0x -c -o $@ $<
 
 %.moc.cxx: %.moc.hpp
-	moc -o $@ $< $(INCLUDES)
+	$(MOC) -o $@ $< $(INCLUDES)
 
 $(TARGET): $(OBJ)
 	$(CXX) -o $@ $(OBJ) $(QT_LIBS) -shared -Wl,--no-undefined -ldl
